@@ -16,19 +16,25 @@ export function formatTime(time) {
   return time.slice(0, 8);
 }
 
-export function getCountdown(date, time = "00:00:00") {
+export function getCountdown(date, time) {
   if (!date) return "";
+
+  // Handle null, undefined or empty interview time
+  time = time || "00:00:00";
 
   const interview = new Date(date);
 
-  const [hour, minute, second] = time.split(":").map(Number);
+  const [hour, minute, second] = time
+    .toString()
+    .split(":")
+    .map(Number);
 
   interview.setHours(hour || 0);
   interview.setMinutes(minute || 0);
   interview.setSeconds(second || 0);
   interview.setMilliseconds(0);
 
-  let diff = interview.getTime() - Date.now();
+  const diff = interview.getTime() - Date.now();
 
   if (diff <= 0) {
     return "Interview Passed";

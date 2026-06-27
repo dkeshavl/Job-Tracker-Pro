@@ -68,7 +68,7 @@ function JobTable({ jobs, deleteJob }) {
 
                 <td className="px-6 py-5 text-gray-300">{job.salary || "-"}</td>
                 <td className="px-6 py-5">
-                  {job.interview_date ? (
+                  {job.interview_date && job.interview_time ? (
                     <div>
                       <p className="text-cyan-400 text-xs">
                         📅{" "}
