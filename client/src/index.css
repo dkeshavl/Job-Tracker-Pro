@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+body {
+  background-color: #000000;
+  color: #e5e7eb;
+}
+
+/* Autofill fix (VERY IMPORTANT) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #000000 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: white;
+  transition: background-color 9999s ease-in-out 0s;
+}
+/* Hide scrollbar but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
