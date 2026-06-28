@@ -1,36 +1,43 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api";
+import DashboardCharts from "../components/DashboardCharts";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Dashboard() {
-  const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm(
-      "This will permanently delete your account and all associated data.\n\nThis action cannot be undone.",
-    );
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmDelete) return;
-
+  const confirmDeleteAccount = async () => {
     try {
       await api.delete("/auth/delete-account");
 
       localStorage.removeItem("token");
 
-      alert("Your account has been deleted successfully.");
+      toast.success("Account deleted successfully.");
 
-      window.location.href = "/login";
+      setShowDeleteModal(false);
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
     } catch (err) {
       console.log(err);
-      alert("Failed to delete account.");
+
+      toast.error("Failed to delete account.");
+
+      setShowDeleteModal(false);
     }
   };
 
-  const [stats, setStats] = useState({
-    total: 0,
-    applied: 0,
-    interview: 0,
-    rejected: 0,
-    offer_count: 0,
-  });
+  const cancelDeleteAccount = () => {
+    setShowDeleteModal(false);
+  };
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
     fetchStats();
@@ -38,8 +45,9 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await api.get("/jobs/stats");
-      setStats(res.data);
+      const res = await api.get("/analytics");
+
+      setAnalytics(res.data);
     } catch (err) {
       console.log(err);
 
@@ -89,30 +97,37 @@ function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
           <div className={card}>
             <p className={statLabel}>Total Jobs</p>
-            <p className={statNumber}>{stats.total}</p>
+            <p className={statNumber}>{analytics?.stats.total || 0}</p>
           </div>
 
           <div className={card}>
             <p className={statLabel}>Applied</p>
-            <p className={statNumber}>{stats.applied}</p>
+            <p className={statNumber}>{analytics?.stats.applied || 0}</p>
           </div>
 
           <div className={card}>
             <p className={statLabel}>Interview</p>
-            <p className={statNumber}>{stats.interview}</p>
+            <p className={statNumber}>{analytics?.stats.interview || 0}</p>
           </div>
 
           <div className={card}>
             <p className={statLabel}>Rejected</p>
-            <p className={statNumber}>{stats.rejected}</p>
+            <p className={statNumber}>{analytics?.stats.rejected || 0}</p>
           </div>
 
           <div className={card}>
             <p className={statLabel}>Offers</p>
-            <p className={statNumber}>{stats.offer_count}</p>
+            <p className={statNumber}>{analytics?.stats.offer_count || 0}</p>
           </div>
         </div>
-
+        {analytics && (
+          <DashboardCharts
+            stats={analytics.stats}
+            monthlyApplications={analytics.monthlyApplications}
+            interviewRate={analytics.interviewRate}
+            offerRate={analytics.offerRate}
+          />
+        )}
         {/* Actions */}
         <div className="flex gap-4">
           <Link to="/jobs">
@@ -128,6 +143,15 @@ function Dashboard() {
           </Link>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Account?"
+        message="This will permanently delete your account and all your jobs. This action cannot be undone."
+        confirmText="Delete Account"
+        confirmColor="bg-red-600 hover:bg-red-500"
+        onConfirm={confirmDeleteAccount}
+        onCancel={cancelDeleteAccount}
+      />
     </div>
   );
 }

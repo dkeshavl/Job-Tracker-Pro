@@ -1,6 +1,8 @@
 import api from "../api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -17,28 +19,24 @@ function Login() {
       });
 
       localStorage.setItem("token", res.data.token);
+      toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (err) {
-      console.log("LOGIN ERROR:", err);
+      console.error(err.response?.data || err);
+
+      toast.error(err.response?.data?.message || "Login failed.");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      
       <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-
         {/* Title */}
-        <h1 className="text-3xl font-bold text-center mb-2">
-          Welcome Back
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-2">Welcome Back</h1>
 
-        <p className="text-center text-zinc-400 mb-6">
-          Login to your account
-        </p>
+        <p className="text-center text-zinc-400 mb-6">Login to your account</p>
 
         <form onSubmit={handleLogin} className="space-y-5">
-
           {/* Email */}
           <div>
             <label className="text-sm text-zinc-400">Email</label>
@@ -62,7 +60,14 @@ function Login() {
               focus:outline-none focus:border-white"
             />
           </div>
-
+          <div className="text-right mb-4">
+            <Link
+              to="/forgot-password"
+              className="text-blue-400 hover:underline text-sm"
+            >
+              Forgot Password?
+            </Link>
+          </div>
           {/* Button */}
           <button
             type="submit"

@@ -8,6 +8,11 @@ import AddJob from "./pages/AddJob";
 import EditJob from "./pages/EditJob";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Kanban from "./pages/Kanban";
+import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmailSuccess from "./pages/VerifyEmailSuccess";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import ResendVerification from "./pages/ResendVerification";
 
 function App() {
   return (
@@ -17,6 +22,17 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Email Verification */}
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+        <Route path="/verify-email-success" element={<VerifyEmailSuccess />} />
+
+        {/* Password Reset */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+        {/* Resend Verification */}
+        <Route path="/resend-verification" element={<ResendVerification />} />
 
         {/* Protected */}
         <Route
@@ -54,6 +70,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/kanban"
           element={

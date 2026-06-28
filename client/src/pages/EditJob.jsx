@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../api";
+import toast from "react-hot-toast";
 
 function EditJob() {
   const { id } = useParams();
@@ -30,7 +31,7 @@ function EditJob() {
       const job = res.data.find((j) => String(j.id) === String(id));
 
       if (!job) {
-        alert("Job not found");
+        toast.error("Job not found.");
         navigate("/jobs");
         return;
       }
@@ -53,8 +54,9 @@ function EditJob() {
           : "",
       });
     } catch (err) {
-      console.error(err);
-      alert("Failed to load job");
+      console.error(err.response?.data || err);
+
+      toast.error("Failed to load job.");
     }
   };
 
@@ -77,22 +79,21 @@ function EditJob() {
         interview_time: form.interview_time || null,
       });
 
-      alert("Job updated successfully");
+      toast.success("Job updated successfully!");
+
       navigate("/jobs");
     } catch (err) {
-      console.error(err);
-      alert("Update Failed");
+      console.error(err.response?.data || err);
+
+      toast.error(err.response?.data?.message || "Failed to update job.");
     }
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
       <div className="w-full max-w-2xl bg-[#0b0b0b] border border-gray-800 rounded-2xl p-8 shadow-xl">
-
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">
-            Edit Job
-          </h1>
+          <h1 className="text-2xl font-bold">Edit Job</h1>
 
           <Link to="/jobs">
             <button className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 transition">
@@ -102,7 +103,6 @@ function EditJob() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
           <input
             type="text"
             name="company"
@@ -189,9 +189,7 @@ function EditJob() {
           >
             Update Job
           </button>
-
         </form>
-
       </div>
     </div>
   );

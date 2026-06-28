@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api";
 import JobTable from "../components/JobTable";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -9,6 +11,8 @@ function Jobs() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortBy, setSortBy] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
 
   const jobsPerPage = 10;
 
@@ -29,16 +33,31 @@ function Jobs() {
     }
   };
 
-  const deleteJob = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this job?")) return;
+  const deleteJob = (id) => {
+    setJobToDelete(id);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDeleteJob = async () => {
     try {
-      await api.delete(`/jobs/${id}`);
+      await api.delete(`/jobs/${jobToDelete}`);
+
+      toast.success("Job deleted successfully.");
+
       fetchJobs();
     } catch (err) {
       console.log(err);
-      alert("Delete failed.");
+
+      toast.error("Failed to delete job.");
     }
+
+    setShowDeleteModal(false);
+    setJobToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setJobToDelete(null);
   };
 
   const filteredJobs = useMemo(() => {
@@ -180,6 +199,15 @@ function Jobs() {
           <div className="flex gap-3"></div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Job?"
+        message="This action cannot be undone."
+        confirmText="Delete"
+        confirmColor="bg-red-600 hover:bg-red-500"
+        onConfirm={confirmDeleteJob}
+        onCancel={cancelDelete}
+      />
     </div>
   );
 }

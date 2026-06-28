@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
+import toast from "react-hot-toast";
 
 function Register() {
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -20,34 +21,40 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      await api.post("/auth/register", form);
+      const res = await api.post("/auth/register", form);
 
-      alert("Registration Successful");
-      navigate("/");
+      toast.success(res.data.message);
+
+      setLoading(false);
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err) {
-      console.log(err);
-      alert("Registration Failed");
+      console.log("Status:", err.response?.status);
+      console.log("Response:", err.response?.data);
+      console.log("Full Error:", err);
+
+      setLoading(false);
+
+      toast.error(err.response?.data?.message || "Registration failed.");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
-
       <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-
         {/* Title */}
-        <h1 className="text-3xl font-bold text-center mb-2">
-          Create Account
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
 
         <p className="text-center text-zinc-400 mb-6">
           Join and start tracking your jobs
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* Name */}
           <input
             type="text"
@@ -87,19 +94,32 @@ function Register() {
           {/* Button */}
           <button
             type="submit"
-            className="w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-zinc-200 transition"
+            disabled={loading}
+            className="w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-zinc-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
         {/* Footer */}
-        <p className="text-center text-zinc-400 text-sm mt-6">
-          Already have an account?{" "}
-          <Link to="/login" className="text-white underline">
-            Login
-          </Link>
-        </p>
+        <div className="mt-6 text-center">
+          <p className="text-zinc-400 text-sm">
+            Already have an account?{" "}
+            <Link to="/login" className="text-white underline">
+              Login
+            </Link>
+          </p>
+
+          <p className="text-zinc-400 text-sm mt-4">
+            Didn't receive the verification email?{" "}
+            <Link
+              to="/resend-verification"
+              className="text-blue-400 hover:underline"
+            >
+              Resend Verification Email
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

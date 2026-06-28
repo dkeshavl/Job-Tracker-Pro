@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
+import toast from "react-hot-toast";
 
 function AddJob() {
   const navigate = useNavigate();
@@ -37,10 +38,13 @@ function AddJob() {
 
       await api.post("/jobs", payload);
 
+      toast.success("Job added successfully!");
+
       navigate("/jobs");
     } catch (err) {
-      console.log(err);
-      alert("Failed to Add Job");
+      console.error(err.response?.data || err);
+
+      toast.error(err.response?.data?.message || "Failed to add job.");
     }
   };
 

@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const mailRoutes = require("./routes/mailRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 require("./cron/interviewReminder");
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/mail", mailRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 app.get("/api/profile", authMiddleware, (req, res) => {
   res.json({
