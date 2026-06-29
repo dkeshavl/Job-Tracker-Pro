@@ -9,4 +9,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// optional: verify email config on startup
+transporter.verify((error) => {
+  if (error) {
+    console.error("❌ Mail Config Error:", error.message);
+  } else {
+    console.log("✅ Mailer is ready");
+  }
+});
+
 module.exports = transporter;

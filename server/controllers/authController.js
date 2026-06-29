@@ -25,7 +25,13 @@ const registerUser = async (req, res) => {
       "SELECT id FROM users WHERE email = ?",
       [email],
       async (err, results) => {
-        if (err) return res.status(500).json(err);
+        if (err) {
+          console.error("DB Error:", err);
+          return res.status(500).json({
+            message: "Database error",
+            error: err.sqlMessage || err.message,
+          });
+        }
 
         if (results.length > 0) {
           return res.status(400).json({
@@ -105,7 +111,13 @@ const loginUser = (req, res) => {
     "SELECT * FROM users WHERE email=?",
     [email],
     async (err, results) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
+        });
+      }
 
       if (results.length === 0) {
         return res.status(404).json({
@@ -156,14 +168,19 @@ const verifyEmail = (req, res) => {
      AND verification_expires > NOW()`,
     [token],
     (err, results) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
+        });
+      }
 
       if (results.length === 0) {
         return res.status(400).json({
           message: "Invalid or expired verification link.",
         });
       }
-
       const user = results[0];
 
       db.query(
@@ -196,7 +213,13 @@ const resendVerificationEmail = (req, res) => {
     "SELECT * FROM users WHERE email = ?",
     [email],
     async (err, results) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
+        });
+      }
 
       if (results.length === 0) {
         return res.status(404).json({
@@ -258,7 +281,13 @@ const forgotPassword = (req, res) => {
     "SELECT * FROM users WHERE email=?",
     [email],
     async (err, results) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
+        });
+      }
 
       if (results.length === 0) {
         return res.status(404).json({
@@ -276,16 +305,24 @@ const forgotPassword = (req, res) => {
 
           const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
-          await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: "Reset Password - Job Tracker Pro",
-            html: resetPasswordTemplate(user.name, resetLink),
-          });
+          try {
+            await transporter.sendMail({
+              from: process.env.EMAIL_USER,
+              to: user.email,
+              subject: "Reset Password - Job Tracker Pro",
+              html: resetPasswordTemplate(user.name, resetLink),
+            });
 
-          res.json({
-            message: "Password reset link has been sent.",
-          });
+            res.json({
+              message: "Password reset link has been sent.",
+            });
+          } catch (mailError) {
+            console.error("Mail Error:", mailError);
+            return res.status(500).json({
+              message: "Failed to send email",
+            });
+          }
+
         },
       );
     },
@@ -305,7 +342,13 @@ const resetPassword = async (req, res) => {
     `SELECT * FROM users WHERE reset_token=? AND reset_expires > NOW()`,
     [token],
     (err, results) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
+        });
+      }
 
       if (results.length === 0) {
         return res.status(400).json({
@@ -339,7 +382,13 @@ const deleteAccount = (req, res) => {
   const userId = req.user.id;
 
   db.query("DELETE FROM jobs WHERE user_id=?", [userId], (err) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      console.error("DB Error:", err);
+      return res.status(500).json({
+        message: "Database error",
+        error: err.sqlMessage || err.message,
+      });
+    }
 
     db.query("DELETE FROM users WHERE id=?", [userId], (err2) => {
       if (err2) return res.status(500).json(err2);

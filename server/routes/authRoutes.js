@@ -13,21 +13,19 @@ const {
   resetPassword,
 } = require("../controllers/authController");
 
-// Auth routes
+// auth
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// Email verification (FIXED)
+// email verification
 router.get("/verify-email/:token", verifyEmail);
-
-// Resend verification email
 router.post("/resend-verification", resendVerificationEmail);
 
-// Password reset flow
+// password reset
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
-// Protected route
+// protected
 router.delete("/delete-account", authMiddleware, deleteAccount);
 
 module.exports = router;
