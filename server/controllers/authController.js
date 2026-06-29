@@ -7,19 +7,25 @@ const transporter = require("../config/mail");
 const verifyEmailTemplate = require("../templates/verifyEmail");
 const resetPasswordTemplate = require("../templates/resetPassword");
 
-// Register
+/* =========================
+   REGISTER USER
+========================= */
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
+  // ✅ validation
+  if (!name || !email || !password) {
+    return res.status(400).json({
+      message: "All fields are required",
+    });
+  }
+
   try {
-    // Check if email already exists
     db.query(
       "SELECT id FROM users WHERE email = ?",
       [email],
       async (err, results) => {
-        if (err) {
-          return res.status(500).json(err);
-        }
+        if (err) return res.status(500).json(err);
 
         if (results.length > 0) {
           return res.status(400).json({
@@ -28,13 +34,9 @@ const registerUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
         const id = uuidv4();
 
-        // Generate verification token
         const verificationToken = crypto.randomBytes(32).toString("hex");
-
-        // 24-hour expiry
         const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         db.query(
@@ -50,55 +52,60 @@ const registerUser = async (req, res) => {
             verificationToken,
             verificationExpires,
           ],
-          async (err) => {
-            if (err) {
-              return res.status(500).json(err);
-            }
+          async (err2) => {
+            if (err2) return res.status(500).json(err2);
 
-            const verifyLink = `http://localhost:5173/verify-email/${verificationToken}`;
+            const FRONTEND_URL = process.env.FRONTEND_URL;
+
+            const verifyLink = `${FRONTEND_URL}/verify-email/${verificationToken}`;
+
             try {
-              const info = await transporter.sendMail({
+              await transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: "Verify your email - Job Tracker Pro",
                 html: verifyEmailTemplate(name, verifyLink),
               });
 
-              console.log("Verification Email Sent:", info);
+              res.json({
+                message: "Registration successful. Please verify your email.",
+              });
             } catch (mailError) {
-              console.error("Email Error:", mailError);
-
+              console.error(mailError);
               return res.status(500).json({
                 message: "Failed to send verification email.",
               });
             }
-            res.json({
-              message: "Registration successful. Please verify your email.",
-            });
           },
         );
       },
     );
   } catch (err) {
-    console.log(err);
-
+    console.error(err);
     res.status(500).json({
       message: "Server Error",
     });
   }
 };
 
-// Login
+/* =========================
+   LOGIN USER (FIXED)
+========================= */
 const loginUser = (req, res) => {
   const { email, password } = req.body;
+
+  // ✅ FIX: validation must come AFTER destructuring
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Email and password required",
+    });
+  }
 
   db.query(
     "SELECT * FROM users WHERE email=?",
     [email],
     async (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       if (results.length === 0) {
         return res.status(404).json({
@@ -107,6 +114,8 @@ const loginUser = (req, res) => {
       }
 
       const user = results[0];
+
+      // (optional security - you can enable again later)
       if (!user.is_verified) {
         return res.status(403).json({
           message: "Please verify your email before logging in.",
@@ -120,39 +129,34 @@ const loginUser = (req, res) => {
           message: "Invalid password",
         });
       }
-      console.log("SIGN SECRET:", process.env.JWT_SECRET);
+
       const token = jwt.sign(
         {
           id: user.id,
           email: user.email,
         },
         process.env.JWT_SECRET,
-        {
-          expiresIn: "7d",
-        },
+        { expiresIn: "7d" },
       );
 
-      res.json({
-        token,
-      });
+      res.json({ token });
     },
   );
 };
-// Verify Email
+
+/* =========================
+   VERIFY EMAIL
+========================= */
 const verifyEmail = (req, res) => {
-  console.log("VERIFY REQUEST:", req.params.token);
   const { token } = req.params;
 
   db.query(
-    `SELECT *
-     FROM users
-     WHERE verification_token = ?
+    `SELECT * FROM users 
+     WHERE verification_token = ? 
      AND verification_expires > NOW()`,
     [token],
     (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       if (results.length === 0) {
         return res.status(400).json({
@@ -164,27 +168,27 @@ const verifyEmail = (req, res) => {
 
       db.query(
         `UPDATE users
-         SET
-           is_verified = 1,
-           verification_token = NULL,
-           verification_expires = NULL
+         SET is_verified = 1,
+             verification_token = NULL,
+             verification_expires = NULL
          WHERE id = ?`,
         [user.id],
         (err2) => {
-          if (err2) {
-            return res.status(500).json(err2);
-          }
+          if (err2) return res.status(500).json(err2);
 
           res.json({
             success: true,
             message: "Email verified successfully.",
           });
-        }
+        },
       );
-    }
+    },
   );
 };
-// Resend Verification Email
+
+/* =========================
+   RESEND VERIFICATION
+========================= */
 const resendVerificationEmail = (req, res) => {
   const { email } = req.body;
 
@@ -192,9 +196,7 @@ const resendVerificationEmail = (req, res) => {
     "SELECT * FROM users WHERE email = ?",
     [email],
     async (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       if (results.length === 0) {
         return res.status(404).json({
@@ -210,32 +212,16 @@ const resendVerificationEmail = (req, res) => {
         });
       }
 
-      // Generate a new verification token
       const verificationToken = crypto.randomBytes(32).toString("hex");
-
-      // Expire in 24 hours
-      const verificationExpires = new Date(
-        Date.now() + 24 * 60 * 60 * 1000
-      );
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       db.query(
-        `UPDATE users
-         SET
-           verification_token = ?,
-           verification_expires = ?
-         WHERE id = ?`,
-        [
-          verificationToken,
-          verificationExpires,
-          user.id,
-        ],
+        `UPDATE users SET verification_token=?, verification_expires=? WHERE id=?`,
+        [verificationToken, verificationExpires, user.id],
         async (err2) => {
-          if (err2) {
-            return res.status(500).json(err2);
-          }
+          if (err2) return res.status(500).json(err2);
 
-          const verifyLink =
-            `http://localhost:5173/verify-email/${verificationToken}`;
+          const verifyLink = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
 
           try {
             await transporter.sendMail({
@@ -248,34 +234,31 @@ const resendVerificationEmail = (req, res) => {
             res.json({
               message: "Verification email sent successfully.",
             });
-
           } catch (mailError) {
-            console.error(mailError);
-
             res.status(500).json({
               message: "Failed to send verification email.",
             });
           }
-        }
+        },
       );
-    }
+    },
   );
 };
-// Forgot Password
+
+/* =========================
+   FORGOT PASSWORD (FIXED LINK)
+========================= */
 const forgotPassword = (req, res) => {
   const { email } = req.body;
 
   const token = crypto.randomBytes(32).toString("hex");
-
   const expires = new Date(Date.now() + 60 * 60 * 1000);
 
   db.query(
     "SELECT * FROM users WHERE email=?",
     [email],
     async (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       if (results.length === 0) {
         return res.status(404).json({
@@ -286,18 +269,12 @@ const forgotPassword = (req, res) => {
       const user = results[0];
 
       db.query(
-        `UPDATE users
-         SET
-         reset_token=?,
-         reset_expires=?
-         WHERE id=?`,
+        `UPDATE users SET reset_token=?, reset_expires=? WHERE id=?`,
         [token, expires, user.id],
         async (err2) => {
-          if (err2) {
-            return res.status(500).json(err2);
-          }
+          if (err2) return res.status(500).json(err2);
 
-          const resetLink = `http://localhost:5173/reset-password/${token}`;
+          const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
           await transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -314,24 +291,21 @@ const forgotPassword = (req, res) => {
     },
   );
 };
-// Reset Password
+
+/* =========================
+   RESET PASSWORD
+========================= */
 const resetPassword = async (req, res) => {
   const { token } = req.params;
-
   const { password } = req.body;
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
   db.query(
-    `SELECT *
-     FROM users
-     WHERE reset_token=?
-     AND reset_expires > NOW()`,
+    `SELECT * FROM users WHERE reset_token=? AND reset_expires > NOW()`,
     [token],
     (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       if (results.length === 0) {
         return res.status(400).json({
@@ -342,17 +316,12 @@ const resetPassword = async (req, res) => {
       const user = results[0];
 
       db.query(
-        `UPDATE users
-         SET
-         password=?,
-         reset_token=NULL,
-         reset_expires=NULL
+        `UPDATE users 
+         SET password=?, reset_token=NULL, reset_expires=NULL 
          WHERE id=?`,
         [hashedPassword, user.id],
         (err2) => {
-          if (err2) {
-            return res.status(500).json(err2);
-          }
+          if (err2) return res.status(500).json(err2);
 
           res.json({
             message: "Password updated successfully.",
@@ -362,19 +331,18 @@ const resetPassword = async (req, res) => {
     },
   );
 };
-// Delete Account
+
+/* =========================
+   DELETE ACCOUNT
+========================= */
 const deleteAccount = (req, res) => {
   const userId = req.user.id;
 
   db.query("DELETE FROM jobs WHERE user_id=?", [userId], (err) => {
-    if (err) {
-      return res.status(500).json(err);
-    }
+    if (err) return res.status(500).json(err);
 
     db.query("DELETE FROM users WHERE id=?", [userId], (err2) => {
-      if (err2) {
-        return res.status(500).json(err2);
-      }
+      if (err2) return res.status(500).json(err2);
 
       res.json({
         message: "Account deleted successfully",
@@ -382,6 +350,7 @@ const deleteAccount = (req, res) => {
     });
   });
 };
+
 module.exports = {
   registerUser,
   loginUser,
