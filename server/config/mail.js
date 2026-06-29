@@ -1,21 +1,22 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-console.log("EMAIL:", process.env.EMAIL_FROM);
-console.log("PASS EXISTS:", !!process.env.EMAIL_PASS);
+console.log("SMTP USER:", process.env.EMAIL_USER);
+console.log("SMTP HOST:", process.env.EMAIL_HOST);
+console.log("FROM:", process.env.EMAIL_FROM);
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT),
-  secure: false, // Port 587 uses STARTTLS
+  secure: false, // 587 = STARTTLS
 
   auth: {
-    user: process.env.EMAIL_FROM,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL_USER, // ✅ API KEY
+    pass: process.env.EMAIL_PASS, // ✅ SECRET KEY
   },
 });
 
-transporter.verify((err, success) => {
+transporter.verify((err) => {
   if (err) {
     console.error("❌ Mail Error:", err);
   } else {
