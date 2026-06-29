@@ -1,26 +1,29 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-console.log("SMTP USER:", process.env.EMAIL_USER);
-console.log("SMTP HOST:", process.env.EMAIL_HOST);
-console.log("FROM:", process.env.EMAIL_FROM);
-
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // 587 = STARTTLS
+  host: process.env.EMAIL_HOST || "in-v3.mailjet.com",
+  port: Number(process.env.EMAIL_PORT) || 587,
+  secure: false, // STARTTLS
 
   auth: {
-    user: process.env.EMAIL_USER, // ✅ API KEY
-    pass: process.env.EMAIL_PASS, // ✅ SECRET KEY
+    user: process.env.EMAIL_USER, // Mailjet API Key
+    pass: process.env.EMAIL_PASS, // Mailjet Secret Key
+  },
+
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
-transporter.verify((err) => {
-  if (err) {
-    console.error("❌ Mail Error:", err);
+// Verify SMTP connection when the server starts
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Mailjet SMTP Connection Failed");
+    console.error(error);
   } else {
-    console.log("✅ Mailjet SMTP Connected");
+    console.log("✅ Mailjet SMTP Connected Successfully");
+    console.log("📧 Sender:", process.env.EMAIL_FROM);
   }
 });
 
