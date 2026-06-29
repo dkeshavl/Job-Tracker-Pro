@@ -10,7 +10,7 @@ const getJobs = (req, res) => {
     (err, results) => {
       if (err) return res.status(500).json(err);
       res.json(results);
-    }
+    },
   );
 };
 
@@ -29,7 +29,7 @@ const createJob = (req, res) => {
   const jobId = uuidv4();
 
   db.query(
-    `INSERT INTO jobs
+    `INSERT INTO jobs 
     (id, user_id, company, position, status, salary, notes, interview_date, interview_time)
     VALUES (?,?,?,?,?,?,?,?,?)`,
     [
@@ -43,89 +43,50 @@ const createJob = (req, res) => {
       interview_date || null,
       interview_time || null,
     ],
-    async (err) => {
+    (err) => {
       if (err) {
-        return res.status(500).json(err);
+        console.error("CREATE JOB ERROR:", err);
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
+        });
       }
 
-      try {
-        // Get user's name and email
-        const [users] = await db.promise().query(
-          "SELECT name, email FROM users WHERE id = ?",
-          [req.user.id]
-        );
-
-        if (users.length > 0) {
-          const user = users[0];
-
-          await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: "✅ Job Application Added Successfully",
-            html: `
-              <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;border:1px solid #ddd;border-radius:10px">
-
-                <h2 style="color:#2563eb;">Job Tracker Pro</h2>
-
-                <p>Hi <b>${user.name}</b>,</p>
-
-                <p>Your job application has been successfully added.</p>
-
-                <table style="border-collapse:collapse;width:100%">
-                  <tr>
-                    <td><b>Company</b></td>
-                    <td>${company}</td>
-                  </tr>
-
-                  <tr>
-                    <td><b>Position</b></td>
-                    <td>${position}</td>
-                  </tr>
-
-                  <tr>
-                    <td><b>Status</b></td>
-                    <td>${status || "Applied"}</td>
-                  </tr>
-                </table>
-
-                <br>
-
-                <p>
-                  We'll help you organize your applications throughout your job search.
-                </p>
-
-                <p>
-                  If this application later moves to the <b>Interview</b> stage and you add an interview date and time,
-                  Job Tracker Pro will automatically send reminder emails before your interview.
-                </p>
-
-                <hr>
-
-                <p>
-                  Thank you for using <b>Job Tracker Pro</b>.
-                </p>
-
-                <p>
-                  We wish you the very best in your job search! 🚀
-                </p>
-
-              </div>
-            `,
-          });
-
-          console.log("✅ Applied email sent to", user.email);
-        }
-      } catch (mailErr) {
-        console.log("Email Error:", mailErr.message);
-      }
-
-      res.json({
+      // ✅ SEND RESPONSE FIRST (IMPORTANT)
+      res.status(201).json({
         message: "Job created successfully",
       });
-    }
+
+      // ✅ EMAIL IN BACKGROUND (NO await, NO blocking)
+      process.nextTick(() => {
+        db.query(
+          "SELECT name, email FROM users WHERE id = ?",
+          [req.user.id],
+          (err2, users) => {
+            if (err2 || !users.length) return;
+
+            const user = users[0];
+
+            transporter.sendMail(
+              {
+                from: process.env.EMAIL_USER,
+                to: user.email,
+                subject: "Job Added Successfully",
+                html: `<h2>Hi ${user.name}</h2>
+                       <p>Job added: <b>${company}</b> - ${position}</p>`,
+              },
+              (mailErr) => {
+                if (mailErr) {
+                  console.log("EMAIL ERROR:", mailErr.message);
+                }
+              },
+            );
+          },
+        );
+      });
+    },
   );
 };
-
 // Update job
 const updateJob = (req, res) => {
   const { id } = req.params;
@@ -172,160 +133,70 @@ const updateJob = (req, res) => {
       res.json({
         message: "Job updated successfully",
       });
-    }
+    },
   );
 };
 
 // Update only status (Kanban)
-// Update only status (Kanban)
-const updateJobStatus = async (req, res) => {
+const updateJobStatus = (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  try {
-    // Update status
-    await db.promise().query(
-      "UPDATE jobs SET status=? WHERE id=? AND user_id=?",
-      [status, id, req.user.id]
-    );
-
-    // Get job + user details
-    const [rows] = await db.promise().query(
-      `
-      SELECT
-        jobs.company,
-        jobs.position,
-        jobs.interview_date,
-        jobs.interview_time,
-        users.name,
-        users.email
-      FROM jobs
-      JOIN users ON jobs.user_id = users.id
-      WHERE jobs.id = ? AND jobs.user_id = ?
-      `,
-      [id, req.user.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Job not found." });
-    }
-
-    const job = rows[0];
-
-    let subject = "";
-    let html = "";
-
-    switch (status) {
-      case "Interview":
-        subject = `📅 Interview Status Updated`;
-
-        html = `
-          <h2>Interview Scheduled</h2>
-
-          <p>Hi <b>${job.name}</b>,</p>
-
-          <p>Your application has moved to the <b>Interview</b> stage.</p>
-
-          <p><b>Company:</b> ${job.company}</p>
-          <p><b>Position:</b> ${job.position}</p>
-
-          <p>
-            If you've added an interview date and time,
-            Job Tracker Pro will automatically remind you:
-          </p>
-
-          <ul>
-            <li>📅 1 day before</li>
-            <li>⏰ 1 hour before</li>
-            <li>🚨 Final reminder (under 10 minutes)</li>
-          </ul>
-
-          <p>Good luck with your interview! 🎉</p>
-        `;
-        break;
-
-      case "Offer":
-        subject = `🎉 Congratulations!`;
-
-        html = `
-          <h2>Congratulations!</h2>
-
-          <p>Hi <b>${job.name}</b>,</p>
-
-          <p>Your application has been updated to <b>Offer</b>.</p>
-
-          <p><b>Company:</b> ${job.company}</p>
-          <p><b>Position:</b> ${job.position}</p>
-
-          <p>
-            We hope this opportunity leads to an exciting new chapter in your career.
-          </p>
-
-          <p>
-            Thank you for choosing Job Tracker Pro.
-          </p>
-
-          <h3>🎉 Best wishes for your future!</h3>
-        `;
-        break;
-
-      case "Rejected":
-        subject = `💙 Keep Going`;
-
-        html = `
-          <h2>Application Status Updated</h2>
-
-          <p>Hi <b>${job.name}</b>,</p>
-
-          <p>Your application has been updated to <b>Rejected</b>.</p>
-
-          <p><b>Company:</b> ${job.company}</p>
-          <p><b>Position:</b> ${job.position}</p>
-
-          <p>
-            Every application is another step toward the right opportunity.
-          </p>
-
-          <p>
-            Keep learning.
-            Keep applying.
-            Don't give up.
-          </p>
-
-          <p>
-            Job Tracker Pro will continue helping you throughout your job search.
-          </p>
-        `;
-        break;
-
-      default:
-        return res.json({
-          message: "Status updated successfully",
+  db.query(
+    "UPDATE jobs SET status=? WHERE id=? AND user_id=?",
+    [status, id, req.user.id],
+    (err) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Database error",
+          error: err.sqlMessage || err.message,
         });
-    }
+      }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: job.email,
-      subject,
-      html,
-    });
+      db.query(
+        `SELECT jobs.company, jobs.position, users.name, users.email
+         FROM jobs
+         JOIN users ON jobs.user_id = users.id
+         WHERE jobs.id = ? AND jobs.user_id = ?`,
+        [id, req.user.id],
+        (err2, rows) => {
+          if (err2 || !rows.length) {
+            return res.json({ message: "Status updated" });
+          }
 
-    console.log(`✅ ${status} email sent`);
+          const job = rows[0];
 
-    res.json({
-      message: "Status updated successfully",
-    });
+          let subject = "Job Status Updated";
+          let html = `<p>${job.name}, status changed to ${status}</p>`;
 
-  } catch (err) {
-    console.log(err);
+          if (status === "Interview") {
+            subject = "Interview Scheduled";
+          } else if (status === "Offer") {
+            subject = "🎉 Offer Received";
+          } else if (status === "Rejected") {
+            subject = "Application Update";
+          }
 
-    res.status(500).json({
-      error: err.message,
-    });
-  }
+          transporter.sendMail(
+            {
+              from: process.env.EMAIL_USER,
+              to: job.email,
+              subject,
+              html,
+            },
+            (err3) => {
+              if (err3) console.log("EMAIL ERROR:", err3.message);
+            },
+          );
+
+          return res.json({
+            message: "Status updated successfully",
+          });
+        },
+      );
+    },
+  );
 };
-
 // Delete job
 const deleteJob = (req, res) => {
   const { id } = req.params;
@@ -337,7 +208,7 @@ const deleteJob = (req, res) => {
       if (err) return res.status(500).json(err);
 
       res.json({ message: "Job deleted successfully" });
-    }
+    },
   );
 };
 
@@ -371,7 +242,7 @@ const getStats = (req, res) => {
         rejected: row.rejected || 0,
         offer_count: row.offer_count || 0,
       });
-    }
+    },
   );
 };
 

@@ -15,12 +15,23 @@ require("./cron/interviewReminder");
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://job-tracker-pro-pearl.vercel.app",
+  "https://job-tracker-pro-git-main-dkeshavl.vercel.app"
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://job-tracker-pro-pearl.vercel.app",
-    ],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(null, true); // temporary permissive for debugging
+    },
     credentials: true,
   })
 );
