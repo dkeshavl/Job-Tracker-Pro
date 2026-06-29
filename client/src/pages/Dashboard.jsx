@@ -76,13 +76,26 @@ function Dashboard() {
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
 
-          <div className="flex gap-3">
+            <div className="flex gap-4">
+              <Link to="/jobs">
+                <button className="bg-white text-black hover:bg-gray-200 px-5 py-2 rounded-lg transition">
+                  View Jobs
+                </button>
+              </Link>
+
+              <Link to="/add-job">
+                <button className="bg-black border border-gray-700 hover:border-gray-500 text-white px-5 py-2 rounded-lg transition">
+                  Add Job
+                </button>
+              </Link>
             <button
               onClick={handleLogout}
               className="px-5 py-2 rounded-lg border border-gray-700 hover:border-gray-500 transition"
             >
               Logout
             </button>
+            </div>
+          <div className="flex gap-3">
 
             <button
               onClick={handleDeleteAccount}
@@ -90,6 +103,7 @@ function Dashboard() {
             >
               Delete Account
             </button>
+            {/* Actions */}
           </div>
         </div>
 
@@ -128,20 +142,6 @@ function Dashboard() {
             offerRate={analytics.offerRate}
           />
         )}
-        {/* Actions */}
-        <div className="flex gap-4">
-          <Link to="/jobs">
-            <button className="bg-white text-black hover:bg-gray-200 px-5 py-2 rounded-lg transition">
-              View Jobs
-            </button>
-          </Link>
-
-          <Link to="/add-job">
-            <button className="bg-black border border-gray-700 hover:border-gray-500 text-white px-5 py-2 rounded-lg transition">
-              Add Job
-            </button>
-          </Link>
-        </div>
       </div>
       <ConfirmModal
         isOpen={showDeleteModal}
