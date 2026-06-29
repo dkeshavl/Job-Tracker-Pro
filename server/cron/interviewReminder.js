@@ -72,7 +72,7 @@ cron.schedule("* * * * *", async () => {
         job.reminder_24h === 0
       ) {
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: process.env.EMAIL_FROM,
           to: job.email,
           subject: `📅 Interview Tomorrow - ${job.company}`,
           html: `
@@ -96,7 +96,7 @@ cron.schedule("* * * * *", async () => {
         job.reminder_1h === 0
       ) {
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: process.env.EMAIL_FROM,
           to: job.email,
           subject: `⏰ Interview in 1 Hour - ${job.company}`,
           html: `
@@ -128,7 +128,7 @@ cron.schedule("* * * * *", async () => {
         const latestSeconds = latestTotalSeconds % 60;
 
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: process.env.EMAIL_FROM,
           to: job.email,
           subject: `🚨 Your Interview Starts Soon (${job.company})`,
           html: `

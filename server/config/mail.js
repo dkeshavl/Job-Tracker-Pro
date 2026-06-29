@@ -1,25 +1,25 @@
-console.log("EMAIL:", process.env.EMAIL_USER);
+require("dotenv").config();
+const nodemailer = require("nodemailer");
+
+console.log("EMAIL:", process.env.EMAIL_FROM);
 console.log("PASS EXISTS:", !!process.env.EMAIL_PASS);
 
-const nodemailer = require("nodemailer");
-require("dotenv").config();
-
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT),
+  secure: false, // Port 587 uses STARTTLS
 
   auth: {
-    user: process.env.EMAIL_USER,
+    user: process.env.EMAIL_FROM,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-transporter.verify((err) => {
+transporter.verify((err, success) => {
   if (err) {
-    console.error(err);
+    console.error("❌ Mail Error:", err);
   } else {
-    console.log("SMTP Connected");
+    console.log("✅ Mailjet SMTP Connected");
   }
 });
 

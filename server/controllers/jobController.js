@@ -69,7 +69,7 @@ const createJob = (req, res) => {
 
             transporter.sendMail(
               {
-                from: process.env.EMAIL_USER,
+                from: process.env.EMAIL_FROM,
                 to: user.email,
                 subject: "Job Added Successfully",
                 html: `<h2>Hi ${user.name}</h2>
@@ -179,7 +179,7 @@ const updateJobStatus = (req, res) => {
 
           transporter.sendMail(
             {
-              from: process.env.EMAIL_USER,
+              from: process.env.EMAIL_FROM,
               to: job.email,
               subject,
               html,

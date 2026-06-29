@@ -67,7 +67,7 @@ const registerUser = async (req, res) => {
 
             try {
               await transporter.sendMail({
-                from: process.env.EMAIL_USER,
+                from: process.env.EMAIL_FROM,
                 to: email,
                 subject: "Verify your email - Job Tracker Pro",
                 html: verifyEmailTemplate(name, verifyLink),
@@ -248,7 +248,7 @@ const resendVerificationEmail = (req, res) => {
 
           try {
             await transporter.sendMail({
-              from: process.env.EMAIL_USER,
+              from: process.env.EMAIL_FROM,
               to: user.email,
               subject: "Verify your email - Job Tracker Pro",
               html: verifyEmailTemplate(user.name, verifyLink),
@@ -307,7 +307,7 @@ const forgotPassword = (req, res) => {
 
           try {
             await transporter.sendMail({
-              from: process.env.EMAIL_USER,
+              from: process.env.EMAIL_FROM,
               to: user.email,
               subject: "Reset Password - Job Tracker Pro",
               html: resetPasswordTemplate(user.name, resetLink),

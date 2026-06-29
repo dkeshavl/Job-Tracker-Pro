@@ -5,8 +5,8 @@ const transporter = require("../config/mail");
 router.get("/test-email", async (req, res) => {
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // send to yourself
+      from: process.env.EMAIL_FROM,
+      to: process.env.EMAIL_FROM, // send to yourself
       subject: "🎉 Job Tracker Pro Test Email",
       html: `
         <h2>Email is Working!</h2>
