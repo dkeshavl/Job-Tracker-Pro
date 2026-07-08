@@ -48,21 +48,21 @@ function DashboardCharts({
   ];
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8 my-10">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 my-8 lg:my-10">
       {/* ===================== PIE CHART ===================== */}
 
       <div className="bg-[#0b0b0b] border border-gray-800 rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-6">Job Status Distribution</h2>
 
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={280}>
           <PieChart>
             <Pie
               rootTabIndex={-1}
               data={pieData}
               dataKey="value"
               nameKey="name"
-              outerRadius={105}
-              innerRadius={55}
+              outerRadius="70%"
+              innerRadius="45%"
               paddingAngle={3}
               stroke="#111827"
               strokeWidth={2}
@@ -106,10 +106,12 @@ function DashboardCharts({
 
             <Legend
               verticalAlign="bottom"
+              align="center"
               iconType="circle"
               wrapperStyle={{
                 color: "#d1d5db",
-                paddingTop: 20,
+                fontSize: "13px",
+                paddingTop: 12,
               }}
             />
           </PieChart>
@@ -118,11 +120,22 @@ function DashboardCharts({
 
       {/* ===================== BAR CHART ===================== */}
 
-      <div className="bg-[#0b0b0b] border border-gray-800 rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-6">Monthly Applications</h2>
+      <div className="bg-[#0b0b0b] border border-gray-800 rounded-xl p-4 sm:p-5 lg:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
+          Monthly Applications
+        </h2>
 
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={monthlyApplications} rootTabIndex={-1}>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart
+            data={monthlyApplications}
+            rootTabIndex={-1}
+            margin={{
+              top: 10,
+              right: 10,
+              left: -20,
+              bottom: 5,
+            }}
+          >
             <CartesianGrid stroke="#2b2b2b" strokeDasharray="4 4" />
 
             <XAxis
@@ -170,7 +183,7 @@ function DashboardCharts({
       <div className="bg-[#0b0b0b] border border-gray-800 rounded-xl p-6">
         <h2 className="text-xl font-semibold">Interview Rate</h2>
 
-        <p className="text-3xl font-bold text-yellow-400 mt-10">
+        <p className="text-2xl sm:text-3xl font-bold text-yellow-400 mt-6 sm:mt-10">
           {interviewRate}%
         </p>
       </div>
@@ -180,7 +193,7 @@ function DashboardCharts({
       <div className="bg-[#0b0b0b] border border-gray-800 rounded-xl p-6">
         <h2 className="text-xl font-semibold">Offer Rate</h2>
 
-        <p className="text-3xl font-bold text-green-400 mt-10">{offerRate}%</p>
+        <p className="text-2xl sm:text-3xl font-bold text-green-400 mt-6 sm:mt-10">{offerRate}%</p>
       </div>
     </div>
   );

@@ -64,46 +64,47 @@ function Dashboard() {
   };
 
   const card =
-    "bg-[#0b0b0b] border border-gray-800 rounded-xl p-5 text-center hover:border-gray-600 transition";
+    "bg-[#0b0b0b] border border-gray-800 rounded-xl p-4 sm:p-5 text-center hover:border-gray-600 transition";
 
   const statNumber = "text-2xl font-semibold text-white";
   const statLabel = "text-gray-400 text-sm";
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-8">
+    <div className="min-h-screen bg-black text-white px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-5 mb-10">
+          <h1 className="text-3xl font-semibold tracking-tight text-center lg:text-left">
+            Dashboard
+          </h1>
 
-            <div className="flex gap-4">
-              <Link to="/jobs">
-                <button className="bg-white text-black hover:bg-gray-200 px-5 py-2 rounded-lg transition">
-                  View Jobs
-                </button>
-              </Link>
+          {/* Buttons */}
+          <div className="flex flex-wrap justify-center lg:justify-end gap-3">
+            <Link to="/jobs">
+              <button className="w-full sm:w-auto bg-white text-black hover:bg-gray-200 px-5 py-2 rounded-lg transition">
+                View Jobs
+              </button>
+            </Link>
 
-              <Link to="/add-job">
-                <button className="bg-black border border-gray-700 hover:border-gray-500 text-white px-5 py-2 rounded-lg transition">
-                  Add Job
-                </button>
-              </Link>
+            <Link to="/add-job">
+              <button className="w-full sm:w-auto bg-black border border-gray-700 hover:border-gray-500 text-white px-5 py-2 rounded-lg transition">
+                Add Job
+              </button>
+            </Link>
+
             <button
               onClick={handleLogout}
-              className="px-5 py-2 rounded-lg border border-gray-700 hover:border-gray-500 transition"
+              className="w-full sm:w-auto px-5 py-2 rounded-lg border border-gray-700 hover:border-gray-500 transition"
             >
               Logout
             </button>
-            </div>
-          <div className="flex gap-3">
 
             <button
               onClick={handleDeleteAccount}
-              className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition"
+              className="w-full sm:w-auto px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition"
             >
               Delete Account
             </button>
-            {/* Actions */}
           </div>
         </div>
 
