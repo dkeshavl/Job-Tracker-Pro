@@ -5,6 +5,11 @@ const statusUpdateTemplate = require("../templates/statusUpdateTemplate");
 const jobCreatedTemplate = require("../templates/jobCreatedTemplate");
 const deleteJobTemplate = require("../templates/deleteJobTemplate");
 
+function toMysqlDatetime(isoString) {
+  if (!isoString) return null;
+  return isoString.replace("T", " ").replace(/\.\d+Z?$/, "").replace(/Z$/, "");
+}
+
 // Get all jobs
 const getJobs = (req, res) => {
   db.query(
@@ -42,7 +47,7 @@ const createJob = (req, res) => {
       status || "Applied",
       salary || null,
       notes || null,
-      interview_datetime || null, // ✅ MySQL stores as DATETIME in UTC
+      toMysqlDatetime(interview_datetime), // ✅ MySQL stores as DATETIME in UTC
     ],
     (err) => {
       if (err) {
@@ -125,7 +130,7 @@ const updateJob = (req, res) => {
       status,
       salary || null,
       notes || null,
-      interview_datetime || null, // ✅ UTC datetime
+      toMysqlDatetime(interview_datetime), // ✅ UTC datetime
       id,
       req.user.id,
     ],
