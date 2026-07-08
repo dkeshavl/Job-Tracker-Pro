@@ -29,21 +29,26 @@ cron.schedule("* * * * *", async () => {
     )
 `);
 
-    console.log("======================================");
-    console.log("Checking Interview Reminders");
-    console.log("Time:", new Date().toLocaleString());
-    console.log("======================================");
+for (const job of jobs) {
+  const interview = new Date(job.interview_date);
 
-    for (const job of jobs) {
-      const interview = new Date(job.interview_date);
+  // attach time
+  if (job.interview_time) {
+    const [h, m, s] = job.interview_time.toString().split(":").map(Number);
+    interview.setHours(h || 0, m || 0, s || 0, 0);
+  }
 
-      // attach time
-      if (job.interview_time) {
-        const [h, m, s] = job.interview_time.toString().split(":").map(Number);
-        interview.setHours(h || 0, m || 0, s || 0, 0);
-      }
+  // ===== DEBUG =====
+  console.log("================================");
+  console.log("DB Date:", job.interview_date);
+  console.log("DB Time:", job.interview_time);
+  console.log("Interview Object:", interview);
+  console.log("Interview ISO:", interview.toISOString());
+  console.log("Now:", new Date());
+  console.log("Now ISO:", new Date().toISOString());
+  console.log("================================");
 
-      const diff = interview.getTime() - Date.now();
+  const diff = interview.getTime() - Date.now();
       // Skip interviews that ended more than 1 minute ago
       if (diff < -60000) {
         console.log("⛔ Interview already finished. Skipping...");
