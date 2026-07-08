@@ -1,6 +1,9 @@
 const { v4: uuidv4 } = require("uuid");
 const db = require("../config/db");
 const transporter = require("../config/mail");
+const statusUpdateTemplate = require("../templates/statusUpdateTemplate");
+const jobCreatedTemplate = require("../templates/jobCreatedTemplate");
+const deleteJobTemplate = require("../templates/deleteJobTemplate");
 
 // Get all jobs
 const getJobs = (req, res) => {
@@ -71,9 +74,14 @@ const createJob = (req, res) => {
               {
                 from: process.env.EMAIL_FROM,
                 to: user.email,
-                subject: "Job Added Successfully",
-                html: `<h2>Hi ${user.name}</h2>
-                       <p>Job added: <b>${company}</b> - ${position}</p>`,
+                subject: `🎉 New Job Added - ${company}`,
+                html: jobCreatedTemplate(
+                  user.name,
+                  company,
+                  position,
+                  status || "Applied",
+                  salary
+                ),
               },
               (mailErr) => {
                 if (mailErr) {
@@ -142,73 +150,147 @@ const updateJobStatus = (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
+  // Get current status first
   db.query(
-    "UPDATE jobs SET status=? WHERE id=? AND user_id=?",
-    [status, id, req.user.id],
-    (err) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Database error",
-          error: err.sqlMessage || err.message,
+    "SELECT status FROM jobs WHERE id=? AND user_id=?",
+    [id, req.user.id],
+    (err0, oldRows) => {
+      if (err0 || !oldRows.length) {
+        return res.status(404).json({
+          message: "Job not found",
         });
       }
 
+      const oldStatus = oldRows[0].status;
+
+      // Update status
       db.query(
-        `SELECT jobs.company, jobs.position, users.name, users.email
-         FROM jobs
-         JOIN users ON jobs.user_id = users.id
-         WHERE jobs.id = ? AND jobs.user_id = ?`,
-        [id, req.user.id],
-        (err2, rows) => {
-          if (err2 || !rows.length) {
-            return res.json({ message: "Status updated" });
+        "UPDATE jobs SET status=? WHERE id=? AND user_id=?",
+        [status, id, req.user.id],
+        (err) => {
+          if (err) {
+            return res.status(500).json({
+              message: "Database error",
+              error: err.sqlMessage || err.message,
+            });
           }
 
-          const job = rows[0];
+          // Get user & job details
+          db.query(
+            `SELECT jobs.company, jobs.position, users.name, users.email
+             FROM jobs
+             JOIN users ON jobs.user_id = users.id
+             WHERE jobs.id = ? AND jobs.user_id = ?`,
+            [id, req.user.id],
+            (err2, rows) => {
+              if (err2 || !rows.length) {
+                return res.json({
+                  message: "Status updated successfully",
+                });
+              }
 
-          let subject = "Job Status Updated";
-          let html = `<p>${job.name}, status changed to ${status}</p>`;
+              const job = rows[0];
 
-          if (status === "Interview") {
-            subject = "Interview Scheduled";
-          } else if (status === "Offer") {
-            subject = "🎉 Offer Received";
-          } else if (status === "Rejected") {
-            subject = "Application Update";
-          }
+              let subject = "📢 Job Status Updated";
 
-          transporter.sendMail(
-            {
-              from: process.env.EMAIL_FROM,
-              to: job.email,
-              subject,
-              html,
-            },
-            (err3) => {
-              if (err3) console.log("EMAIL ERROR:", err3.message);
-            },
+              if (status === "Interview") {
+                subject = "📅 Interview Scheduled";
+              } else if (status === "Offer") {
+                subject = "🎉 Congratulations! Offer Received";
+              } else if (status === "Rejected") {
+                subject = "📌 Application Update";
+              }
+
+              transporter.sendMail(
+                {
+                  from: process.env.EMAIL_FROM,
+                  to: job.email,
+                  subject,
+                  html: statusUpdateTemplate(
+                    job.name,
+                    job.company,
+                    job.position,
+                    oldStatus,
+                    status
+                  ),
+                },
+                (err3) => {
+                  if (err3) {
+                    console.log("EMAIL ERROR:", err3.message);
+                  }
+                }
+              );
+
+              return res.json({
+                message: "Status updated successfully",
+              });
+            }
           );
-
-          return res.json({
-            message: "Status updated successfully",
-          });
-        },
+        }
       );
-    },
+    }
   );
 };
+// Delete job
 // Delete job
 const deleteJob = (req, res) => {
   const { id } = req.params;
 
+  // Get job & user details first
   db.query(
-    "DELETE FROM jobs WHERE id=? AND user_id=?",
+    `SELECT jobs.company, jobs.position, users.name, users.email
+     FROM jobs
+     JOIN users ON jobs.user_id = users.id
+     WHERE jobs.id = ? AND jobs.user_id = ?`,
     [id, req.user.id],
-    (err) => {
-      if (err) return res.status(500).json(err);
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
 
-      res.json({ message: "Job deleted successfully" });
-    },
+      if (!rows.length) {
+        return res.status(404).json({
+          message: "Job not found",
+        });
+      }
+
+      const job = rows[0];
+
+      // Delete the job
+      db.query(
+        "DELETE FROM jobs WHERE id=? AND user_id=?",
+        [id, req.user.id],
+        (deleteErr) => {
+          if (deleteErr) {
+            return res.status(500).json(deleteErr);
+          }
+
+          // Respond immediately
+          res.json({
+            message: "Job deleted successfully",
+          });
+
+          // Send email in background
+          transporter.sendMail(
+            {
+              from: process.env.EMAIL_FROM,
+              to: job.email,
+              subject: `🗑️ Job Deleted - ${job.company}`,
+              html: deleteJobTemplate(
+                job.name,
+                job.company,
+                job.position
+              ),
+            },
+            (mailErr) => {
+              if (mailErr) {
+                console.log("EMAIL ERROR:", mailErr.message);
+              }
+            }
+          );
+        }
+      );
+    }
   );
 };
 

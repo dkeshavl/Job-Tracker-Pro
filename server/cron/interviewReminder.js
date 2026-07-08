@@ -2,6 +2,9 @@ const cron = require("node-cron");
 const db = require("../config/db");
 const transporter = require("../config/mail");
 
+const interviewReminderTemplate = require("../templates/interviewReminderTemplate");
+const interview10mTemplate = require("../templates/interview10mTemplate");
+
 console.log("✅ Interview Reminder Cron Started");
 
 // runs every minute
@@ -75,11 +78,15 @@ cron.schedule("* * * * *", async () => {
           from: process.env.EMAIL_FROM,
           to: job.email,
           subject: `📅 Interview Tomorrow - ${job.company}`,
-          html: `
-            <h2>Interview Reminder</h2>
-            <p>Hi ${job.name},</p>
-            <p>Your interview for <b>${job.position}</b> is scheduled tomorrow.</p>
-          `,
+          html: interviewReminderTemplate(
+            "📅 Interview Tomorrow",
+            job.name,
+            job.company,
+            job.position,
+            new Date(job.interview_date).toLocaleDateString(),
+            job.interview_time,
+            "Tomorrow"
+          ),
         });
 
         await db
@@ -99,11 +106,15 @@ cron.schedule("* * * * *", async () => {
           from: process.env.EMAIL_FROM,
           to: job.email,
           subject: `⏰ Interview in 1 Hour - ${job.company}`,
-          html: `
-            <h2>Interview Reminder</h2>
-            <p>Hi ${job.name},</p>
-            <p>Your interview for <b>${job.position}</b> is in 1 hour.</p>
-          `,
+          html: interviewReminderTemplate(
+            "⏰ Interview in 1 Hour",
+            job.name,
+            job.company,
+            job.position,
+            new Date(job.interview_date).toLocaleDateString(),
+            job.interview_time,
+            "1 Hour"
+          ),
         });
 
         await db
@@ -131,62 +142,18 @@ cron.schedule("* * * * *", async () => {
           from: process.env.EMAIL_FROM,
           to: job.email,
           subject: `🚨 Your Interview Starts Soon (${job.company})`,
-          html: `
-      <div style="font-family:Arial,sans-serif;max-width:650px;margin:auto;padding:20px;border:1px solid #ddd;border-radius:10px">
-
-        <h2 style="color:#dc2626;">
-          🚨 Interview Starting Soon
-        </h2>
-
-        <p>Hi <b>${job.name}</b>,</p>
-
-        <p>
-          Your interview for
-          <b>${job.position}</b>
-          at
-          <b>${job.company}</b>
-          is starting soon.
-        </p>
-
-        <p style="font-size:16px;">
-            ⏳ Your interview starts in
-            <b>
-                ${
-                  latestMinutes > 0
-                    ? `${latestMinutes} minute${latestMinutes !== 1 ? "s" : ""}`
-                    : ""
-                }
-                ${latestMinutes > 0 && latestSeconds > 0 ? " and " : ""}
-                ${
-                  latestSeconds > 0
-                    ? `${latestSeconds} second${latestSeconds !== 1 ? "s" : ""}`
-                    : ""
-                }
-                ${latestMinutes === 0 && latestSeconds === 0 ? "a few moments" : ""}
-            </b>.
-        </p>
-
-        <hr>
-
-        <p>Please make sure:</p>
-
-        <ul>
-          <li>✅ Stable internet connection</li>
-          <li>✅ Camera & microphone are working</li>
-          <li>✅ Resume is ready</li>
-          <li>✅ Join the meeting a few minutes early</li>
-        </ul>
-
-        <p>
-          We wish you the very best for your interview.
-        </p>
-
-        <p>
-          <b>— Job Tracker Pro</b>
-        </p>
-
-      </div>
-    `,
+          html: interview10mTemplate(
+            job.name,
+            job.company,
+            job.position,
+            new Date(job.interview_date).toLocaleDateString(),
+            job.interview_time,
+            `${latestMinutes} minute${latestMinutes !== 1 ? "s" : ""}${
+              latestSeconds > 0
+                ? ` ${latestSeconds} second${latestSeconds !== 1 ? "s" : ""}`
+                : ""
+            }`
+          ),
         });
 
         await db
