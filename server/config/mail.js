@@ -1,38 +1,62 @@
 require("dotenv").config();
-const Mailjet = require("node-mailjet");
 
-const mailjet = Mailjet.apiConnect(
-  process.env.EMAIL_USER,
-  process.env.EMAIL_PASS,
-);
+// Render's free tier blocks outbound SMTP ports (25/465/587), so we send
+// via Brevo's HTTPS transactional email API instead (port 443, never
+// blocked). Brevo's free tier (300 emails/day) allows sending to ANY
+// recipient without domain verification — you only need to verify the
+// single "From" sender address once (a confirmation link, no DNS needed).
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
+// Parses "Display Name <email@x.com>" or a bare "email@x.com" into
+// Brevo's { email, name } shape.
 function parseFrom(fromStr) {
   const fallback = process.env.EMAIL_FROM || "";
   const value = fromStr || fallback;
   const match = value.match(/^(.*)<(.+)>$/);
+
   if (match) {
-    return { Email: match[2].trim(), Name: match[1].trim().replace(/^"|"$/g, "") || undefined };
+    return {
+      email: match[2].trim(),
+      name: match[1].trim().replace(/^"|"$/g, "") || undefined,
+    };
   }
-  return { Email: value.trim() };
+
+  return { email: value.trim() };
 }
 
+// Same call shape as nodemailer's transporter.sendMail:
+// supports both `await sendMail({...})` and `sendMail({...}, callback)`.
 function sendMail({ from, to, subject, html, text }, callback) {
-  const promise = mailjet
-    .post("send", { version: "v3.1" })
-    .request({
-      Messages: [
-        {
-          From: parseFrom(from),
-          To: [{ Email: to }],
-          Subject: subject,
-          HTMLPart: html,
-          TextPart: text,
-        },
-      ],
+  const promise = fetch(BREVO_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: parseFrom(from),
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  })
+    .then(async (res) => {
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const detail = body?.message || JSON.stringify(body);
+        console.error("❌ Brevo rejected message:", detail);
+        throw new Error(`Brevo rejected message: ${detail}`);
+      }
+
+      return body;
     })
-    .then((res) => res.body)
     .catch((err) => {
-      console.error("❌ Mailjet API send failed:", err?.response?.data || err.message);
+      if (!err.message?.startsWith("Brevo rejected message")) {
+        console.error("❌ Brevo send failed:", err.message || err);
+      }
       throw err;
     });
 
@@ -40,19 +64,25 @@ function sendMail({ from, to, subject, html, text }, callback) {
     promise.then((body) => callback(null, body)).catch((err) => callback(err));
     return;
   }
+
   return promise;
 }
 
-mailjet
-  .get("apikey", { version: "v3" })
-  .request()
-  .then(() => {
-    console.log("✅ Mailjet API credentials OK (using HTTPS REST API)");
-    console.log("📧 Sender:", process.env.EMAIL_FROM);
+// Lightweight startup check — confirms the API key is valid.
+fetch("https://api.brevo.com/v3/account", {
+  headers: { "api-key": process.env.BREVO_API_KEY, Accept: "application/json" },
+})
+  .then(async (res) => {
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error("❌ Brevo API key check failed:", body?.message || res.statusText);
+    } else {
+      console.log("✅ Brevo API key OK");
+      console.log("📧 Sender:", process.env.EMAIL_FROM);
+    }
   })
   .catch((err) => {
-    console.error("❌ Mailjet API credential check failed");
-    console.error(err?.response?.data || err.message);
+    console.error("❌ Brevo API key check failed:", err.message || err);
   });
 
 module.exports = { sendMail };
