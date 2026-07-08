@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import api from "../api";
-import { formatDate } from "../utils/time";
+import { formatDate, formatTime } from "../utils/time";
 import LiveCountdown from "../components/LiveCountdown";
 
 function Kanban() {
@@ -38,10 +38,8 @@ function Kanban() {
 
     setJobs((prev) =>
       prev.map((job) =>
-        job.id === draggableId
-          ? { ...job, status: newStatus }
-          : job
-      )
+        job.id === draggableId ? { ...job, status: newStatus } : job,
+      ),
     );
 
     try {
@@ -81,9 +79,7 @@ function Kanban() {
                   }`}
                 >
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold">
-                      {columnName}
-                    </h2>
+                    <h2 className="text-lg font-semibold">{columnName}</h2>
 
                     <span className="bg-[#222] px-2 py-1 rounded-full text-xs">
                       {columnJobs.length}
@@ -91,11 +87,7 @@ function Kanban() {
                   </div>
 
                   {columnJobs.map((job, index) => (
-                    <Draggable
-                      key={job.id}
-                      draggableId={job.id}
-                      index={index}
-                    >
+                    <Draggable key={job.id} draggableId={job.id} index={index}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
@@ -112,9 +104,7 @@ function Kanban() {
                             {job.company}
                           </h3>
 
-                          <p className="text-gray-400 mt-1">
-                            {job.position}
-                          </p>
+                          <p className="text-gray-400 mt-1">{job.position}</p>
 
                           {job.salary && (
                             <p className="text-green-400 mt-2 font-medium">
@@ -122,19 +112,17 @@ function Kanban() {
                             </p>
                           )}
 
-                          {job.interview_date && (
+                          {job.interview_datetime && (
                             <>
                               <p className="text-cyan-400 text-sm mt-3">
-                                📅 {formatDate(job.interview_date)}
-                                {job.interview_time &&
-                                  ` • ${job.interview_time}`}
+                                📅 {formatDate(job.interview_datetime)} •{" "}
+                                {formatTime(job.interview_datetime)}
                               </p>
 
                               <p className="text-yellow-400 text-xs mt-1 font-semibold">
                                 ⏳{" "}
                                 <LiveCountdown
-                                  date={job.interview_date}
-                                  time={job.interview_time}
+                                  datetime={job.interview_datetime}
                                 />
                               </p>
                             </>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCountdown } from "../utils/time";
 
-function LiveCountdown({ date, time }) {
+function LiveCountdown({ datetime }) {
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ function LiveCountdown({ date, time }) {
     return () => clearInterval(interval);
   }, []);
 
-  return <span>{getCountdown(date, time)}</span>;
+  return <span>{getCountdown(datetime)}</span>;
 }
 
 export default LiveCountdown;

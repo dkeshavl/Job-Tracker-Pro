@@ -11,92 +11,39 @@ console.log("✅ Interview Reminder Cron Started");
 cron.schedule("* * * * *", async () => {
   try {
     const [jobs] = await db.promise().query(`
-  SELECT
-    jobs.*,
-    users.name,
-    users.email
-  FROM jobs
-  INNER JOIN users
-    ON jobs.user_id = users.id
-  WHERE
-    jobs.status = 'Interview'
-    AND jobs.interview_date IS NOT NULL
-    AND TIMESTAMP(jobs.interview_date, jobs.interview_time) >= NOW() - INTERVAL 1 MINUTE
-    AND (
-      jobs.reminder_24h = 0
-      OR jobs.reminder_1h = 0
-      OR jobs.reminder_10m = 0
-    )
-`);
+      SELECT
+        jobs.*,
+        users.name,
+        users.email
+      FROM jobs
+      INNER JOIN users
+        ON jobs.user_id = users.id
+      WHERE
+        jobs.status = 'Interview'
+        AND jobs.interview_datetime IS NOT NULL
+        AND jobs.interview_datetime >= UTC_TIMESTAMP() - INTERVAL 1 MINUTE
+        AND (
+          jobs.reminder_24h = 0
+          OR jobs.reminder_1h = 0
+          OR jobs.reminder_10m = 0
+        )
+    `);
 
-for (const job of jobs) {
-  const interview = new Date(job.interview_date);
+    for (const job of jobs) {
+      const interview = new Date(job.interview_datetime);
+      const diff = interview.getTime() - Date.now();
 
-  // attach time
-  if (job.interview_time) {
-    const [h, m, s] = job.interview_time.toString().split(":").map(Number);
-    interview.setHours(h || 0, m || 0, s || 0, 0);
-  }
-
-  // ===== DEBUG =====
-  console.log("================================");
-  console.log("DB Date:", job.interview_date);
-  console.log("DB Time:", job.interview_time);
-  console.log("Interview Object:", interview);
-  console.log("Interview ISO:", interview.toISOString());
-  console.log("Now:", new Date());
-  console.log("Now ISO:", new Date().toISOString());
-  console.log("================================");
-
-  const diff = interview.getTime() - Date.now();
-
-  console.log("================================");
-console.log("Company:", job.company);
-console.log("Interview Date:", job.interview_date);
-console.log("Interview Time:", job.interview_time);
-
-console.log("Interview Local :", interview.toString());
-console.log("Interview ISO   :", interview.toISOString());
-
-console.log("Server Local    :", new Date().toString());
-console.log("Server ISO      :", new Date().toISOString());
-
-console.log("Interview ms:", interview.getTime());
-console.log("Current ms  :", Date.now());
-console.log("Diff (sec)  :", Math.floor(diff / 1000));
-console.log("================================");
-
-
-      // Skip interviews that ended more than 1 minute ago
-      if (diff < -60000) {
-        console.log("⛔ Interview already finished. Skipping...");
-        continue;
-      }
+      if (diff < -60000) continue;
 
       const totalSeconds = Math.floor(diff / 1000);
-
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      console.log("--------------------------------");
-      console.log("User   :", job.name);
-      console.log("Email  :", job.email);
-      console.log("Company:", job.company);
-      console.log(`Remaining: ${days}d ${hours}h ${minutes}m ${seconds}s`);
-      console.log("Flags  :", {
-        h24: job.reminder_24h,
-        h1: job.reminder_1h,
-        m10: job.reminder_10m,
+      const dateLabel = interview.toLocaleDateString();
+      const timeLabel = interview.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
       });
 
       // -------------------- 24H REMINDER --------------------
-      if (
-        totalSeconds <= 86400 &&
-        totalSeconds > 86340 &&
-        job.reminder_24h === 0
-      ) {
+      if (totalSeconds <= 86400 && totalSeconds > 86340 && job.reminder_24h === 0) {
         await transporter.sendMail({
           from: process.env.EMAIL_FROM,
           to: job.email,
@@ -106,25 +53,18 @@ console.log("================================");
             job.name,
             job.company,
             job.position,
-            new Date(job.interview_date).toLocaleDateString(),
-            job.interview_time,
-            "Tomorrow"
+            dateLabel,
+            timeLabel,
+            "Tomorrow",
           ),
         });
 
-        await db
-          .promise()
-          .query("UPDATE jobs SET reminder_24h = 1 WHERE id = ?", [job.id]);
-
-        console.log("✅ 24h reminder sent");
+        await db.promise().query("UPDATE jobs SET reminder_24h = 1 WHERE id = ?", [job.id]);
+        console.log(`✅ 24h reminder sent to ${job.email} (${job.company})`);
       }
 
       // -------------------- 1H REMINDER --------------------
-      if (
-        totalSeconds <= 3600 &&
-        totalSeconds > 3540 &&
-        job.reminder_1h === 0
-      ) {
+      if (totalSeconds <= 3600 && totalSeconds > 3540 && job.reminder_1h === 0) {
         await transporter.sendMail({
           from: process.env.EMAIL_FROM,
           to: job.email,
@@ -134,30 +74,20 @@ console.log("================================");
             job.name,
             job.company,
             job.position,
-            new Date(job.interview_date).toLocaleDateString(),
-            job.interview_time,
-            "1 Hour"
+            dateLabel,
+            timeLabel,
+            "1 Hour",
           ),
         });
 
-        await db
-          .promise()
-          .query("UPDATE jobs SET reminder_1h = 1 WHERE id = ?", [job.id]);
-
-        console.log("✅ 1h reminder sent");
+        await db.promise().query("UPDATE jobs SET reminder_1h = 1 WHERE id = ?", [job.id]);
+        console.log(`✅ 1h reminder sent to ${job.email} (${job.company})`);
       }
 
-      // -------------------- FINAL REMINDER --------------------
-      if (
-        totalSeconds <= 600 &&
-        totalSeconds >= -59 &&
-        job.reminder_10m === 0
-      ) {
-        // Recalculate remaining time immediately before sending
+      // -------------------- FINAL (10 MIN) REMINDER --------------------
+      if (totalSeconds <= 600 && totalSeconds >= -59 && job.reminder_10m === 0) {
         const latestDiff = interview.getTime() - Date.now();
-
         const latestTotalSeconds = Math.max(0, Math.floor(latestDiff / 1000));
-
         const latestMinutes = Math.floor(latestTotalSeconds / 60);
         const latestSeconds = latestTotalSeconds % 60;
 
@@ -169,24 +99,16 @@ console.log("================================");
             job.name,
             job.company,
             job.position,
-            new Date(job.interview_date).toLocaleDateString(),
-            job.interview_time,
+            dateLabel,
+            timeLabel,
             `${latestMinutes} minute${latestMinutes !== 1 ? "s" : ""}${
-              latestSeconds > 0
-                ? ` ${latestSeconds} second${latestSeconds !== 1 ? "s" : ""}`
-                : ""
-            }`
+              latestSeconds > 0 ? ` ${latestSeconds} second${latestSeconds !== 1 ? "s" : ""}` : ""
+            }`,
           ),
         });
 
-        await db
-          .promise()
-          .query("UPDATE jobs SET reminder_10m = 1 WHERE id = ?", [job.id]);
-
-        console.log(
-          `✅ Final reminder sent to ${job.email} (${latestMinutes}m ${latestSeconds}s remaining)`,
-        );
-        continue;
+        await db.promise().query("UPDATE jobs SET reminder_10m = 1 WHERE id = ?", [job.id]);
+        console.log(`✅ Final reminder sent to ${job.email} (${latestMinutes}m ${latestSeconds}s remaining)`);
       }
     }
   } catch (err) {

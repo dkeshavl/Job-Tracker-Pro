@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { getCountdown } from "../utils/time";
+import { getCountdown, formatDate, formatTime } from "../utils/time";
 
 function JobTable({ jobs, deleteJob }) {
   const navigate = useNavigate();
@@ -68,26 +68,14 @@ function JobTable({ jobs, deleteJob }) {
 
                 <td className="px-6 py-5 text-gray-300">{job.salary || "-"}</td>
                 <td className="px-6 py-5">
-                  {job.interview_date && job.interview_time ? (
+                  {job.interview_datetime ? (
                     <div>
                       <p className="text-cyan-400 text-xs">
-                        📅{" "}
-                        {job.interview_date
-                          ? new Date(job.interview_date).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              },
-                            )
-                          : "-"}
-                        {job.interview_time && ` • ${job.interview_time}`}
+                        📅 {formatDate(job.interview_datetime)} •{" "}
+                        {formatTime(job.interview_datetime)}
                       </p>
-
                       <p className="text-yellow-400 text-xs mt-1">
-                        ⏳{" "}
-                        {getCountdown(job.interview_date, job.interview_time)}
+                        ⏳ {getCountdown(job.interview_datetime)}
                       </p>
                     </div>
                   ) : (

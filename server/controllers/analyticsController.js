@@ -61,18 +61,16 @@ const getAnalytics = async (req, res) => {
         SELECT
             company,
             position,
-            interview_date,
-            interview_time
+            interview_datetime
         FROM jobs
         WHERE
             user_id = ?
             AND status = 'Interview'
-            AND TIMESTAMP(interview_date, interview_time) >= NOW()
+            AND interview_datetime >= UTC_TIMESTAMP()
         ORDER BY
-            interview_date,
-            interview_time
+            interview_datetime
         LIMIT 5
-  `,
+      `,
       [userId],
     );
 

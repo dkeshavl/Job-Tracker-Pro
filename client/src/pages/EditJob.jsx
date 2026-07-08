@@ -27,7 +27,6 @@ function EditJob() {
   const fetchJob = async () => {
     try {
       const res = await api.get("/jobs");
-
       const job = res.data.find((j) => String(j.id) === String(id));
 
       if (!job) {
@@ -36,55 +35,57 @@ function EditJob() {
         return;
       }
 
+      const pad = (n) => String(n).padStart(2, "0");
+      const dt = job.interview_datetime ? new Date(job.interview_datetime) : null;
+
       setForm({
         company: job.company || "",
         position: job.position || "",
         status: job.status || "Applied",
         salary: job.salary || "",
         notes: job.notes || "",
-
-        // Convert MySQL date -> yyyy-mm-dd
-        interview_date: job.interview_date
-          ? new Date(job.interview_date).toISOString().split("T")[0]
+        interview_date: dt
+          ? `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`
           : "",
-
-        // Convert HH:mm:ss -> HH:mm
-        interview_time: job.interview_time
-          ? job.interview_time.substring(0, 5)
-          : "",
+        interview_time: dt ? `${pad(dt.getHours())}:${pad(dt.getMinutes())}` : "",
       });
     } catch (err) {
       console.error(err.response?.data || err);
-
       toast.error("Failed to load job.");
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      let interview_datetime = null;
+
+      if (form.interview_date && form.interview_time) {
+        const [year, month, day] = form.interview_date.split("-").map(Number);
+        const [hours, minutes] = form.interview_time.split(":").map(Number);
+        const localDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+        interview_datetime = localDateTime.toISOString();
+      }
+
       await api.put(`/jobs/${id}`, {
-        ...form,
-        interview_date: form.interview_date || null,
-        interview_time: form.interview_time || null,
+        company: form.company,
+        position: form.position,
+        status: form.status,
+        salary: form.salary || null,
+        notes: form.notes || null,
+        interview_datetime,
       });
 
       toast.success("Job updated successfully!");
-
       navigate("/jobs");
     } catch (err) {
       console.error(err.response?.data || err);
-
       toast.error(err.response?.data?.message || "Failed to update job.");
     }
   };
@@ -94,7 +95,6 @@ function EditJob() {
       <div className="w-full max-w-2xl bg-[#0b0b0b] border border-gray-800 rounded-2xl p-8 shadow-xl">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Edit Job</h1>
-
           <Link to="/jobs">
             <button className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 transition">
               Back
@@ -145,10 +145,7 @@ function EditJob() {
           />
 
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Interview Date
-            </label>
-
+            <label className="block text-sm text-gray-400 mb-2">Interview Date</label>
             <input
               type="date"
               name="interview_date"
@@ -160,10 +157,7 @@ function EditJob() {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Interview Time
-            </label>
-
+            <label className="block text-sm text-gray-400 mb-2">Interview Time</label>
             <input
               type="time"
               name="interview_time"
