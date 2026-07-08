@@ -29,21 +29,40 @@ function AddJob() {
     e.preventDefault();
 
     try {
-      // remove empty values (clean backend input)
+      // ✅ Convert user's local date/time to UTC ISO string
+      let interview_datetime = null;
+
+      if (form.interview_date && form.interview_time) {
+        // Parse the date and time inputs (they're in user's local timezone)
+        const [year, month, day] = form.interview_date.split('-').map(Number);
+        const [hours, minutes] = form.interview_time.split(':').map(Number);
+
+        // Create a Date object in user's local timezone
+        const localDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+        // Convert to UTC ISO 8601 string
+        interview_datetime = localDateTime.toISOString();
+
+        console.log('User entered (local timezone):', localDateTime);
+        console.log('Sending to backend (UTC ISO):', interview_datetime);
+      }
+
+      // Build payload with UTC datetime
       const payload = {
-        ...form,
-        interview_date: form.interview_date || null,
-        interview_time: form.interview_time || null,
+        company: form.company,
+        position: form.position,
+        status: form.status,
+        salary: form.salary || null,
+        notes: form.notes || null,
+        interview_datetime, // ✅ Single UTC ISO string field
       };
 
       await api.post("/jobs", payload);
 
       toast.success("Job added successfully!");
-
       navigate("/jobs");
     } catch (err) {
       console.error(err.response?.data || err);
-
       toast.error(err.response?.data?.message || "Failed to add job.");
     }
   };

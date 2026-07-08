@@ -17,7 +17,7 @@ const getJobs = (req, res) => {
   );
 };
 
-// Create job// Create job
+// Create job
 const createJob = (req, res) => {
   const {
     company,
@@ -25,26 +25,24 @@ const createJob = (req, res) => {
     status,
     salary,
     notes,
-    interview_date,
-    interview_time,
+    interview_datetime, // ✅ Changed: now a single UTC ISO string
   } = req.body;
 
   const jobId = uuidv4();
 
   db.query(
     `INSERT INTO jobs 
-    (id, user_id, company, position, status, salary, notes, interview_date, interview_time)
-    VALUES (?,?,?,?,?,?,?,?,?)`,
+    (id, user_id, company, position, status, salary, notes, interview_datetime)
+    VALUES (?,?,?,?,?,?,?,?)`,
     [
       jobId,
       req.user.id,
       company,
       position,
       status || "Applied",
-      salary,
-      notes,
-      interview_date || null,
-      interview_time || null,
+      salary || null,
+      notes || null,
+      interview_datetime || null, // ✅ MySQL stores as DATETIME in UTC
     ],
     (err) => {
       if (err) {
@@ -95,6 +93,7 @@ const createJob = (req, res) => {
     },
   );
 };
+
 // Update job
 const updateJob = (req, res) => {
   const { id } = req.params;
@@ -105,8 +104,7 @@ const updateJob = (req, res) => {
     status,
     salary,
     notes,
-    interview_date,
-    interview_time,
+    interview_datetime, // ✅ Changed: now a single UTC ISO string
   } = req.body;
 
   db.query(
@@ -116,8 +114,7 @@ const updateJob = (req, res) => {
          status=?,
          salary=?,
          notes=?,
-         interview_date=?,
-         interview_time=?,
+         interview_datetime=?,
          reminder_24h=0,
          reminder_1h=0,
          reminder_10m=0
@@ -126,10 +123,9 @@ const updateJob = (req, res) => {
       company,
       position,
       status,
-      salary,
-      notes,
-      interview_date || null,
-      interview_time || null,
+      salary || null,
+      notes || null,
+      interview_datetime || null, // ✅ UTC datetime
       id,
       req.user.id,
     ],
@@ -231,7 +227,7 @@ const updateJobStatus = (req, res) => {
     }
   );
 };
-// Delete job
+
 // Delete job
 const deleteJob = (req, res) => {
   const { id } = req.params;
@@ -276,11 +272,7 @@ const deleteJob = (req, res) => {
               from: process.env.EMAIL_FROM,
               to: job.email,
               subject: `🗑️ Job Deleted - ${job.company}`,
-              html: deleteJobTemplate(
-                job.name,
-                job.company,
-                job.position
-              ),
+              html: deleteJobTemplate(job.name, job.company, job.position),
             },
             (mailErr) => {
               if (mailErr) {
@@ -300,12 +292,10 @@ const getStats = (req, res) => {
     `
     SELECT
       COUNT(*) AS total,
-
       SUM(CASE WHEN status = 'Applied' THEN 1 ELSE 0 END) AS applied,
       SUM(CASE WHEN status = 'Interview' THEN 1 ELSE 0 END) AS interview,
       SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) AS rejected,
       SUM(CASE WHEN status = 'Offer' THEN 1 ELSE 0 END) AS offer_count
-
     FROM jobs
     WHERE user_id = ?
     `,

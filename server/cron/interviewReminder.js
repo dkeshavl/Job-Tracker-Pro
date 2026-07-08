@@ -49,6 +49,24 @@ for (const job of jobs) {
   console.log("================================");
 
   const diff = interview.getTime() - Date.now();
+
+  console.log("================================");
+console.log("Company:", job.company);
+console.log("Interview Date:", job.interview_date);
+console.log("Interview Time:", job.interview_time);
+
+console.log("Interview Local :", interview.toString());
+console.log("Interview ISO   :", interview.toISOString());
+
+console.log("Server Local    :", new Date().toString());
+console.log("Server ISO      :", new Date().toISOString());
+
+console.log("Interview ms:", interview.getTime());
+console.log("Current ms  :", Date.now());
+console.log("Diff (sec)  :", Math.floor(diff / 1000));
+console.log("================================");
+
+
       // Skip interviews that ended more than 1 minute ago
       if (diff < -60000) {
         console.log("⛔ Interview already finished. Skipping...");
