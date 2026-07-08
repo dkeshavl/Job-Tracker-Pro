@@ -37,3 +37,6 @@ select:-webkit-autofill {
 svg:focus {
   outline: none !important;
 }
+html {
+  scroll-behavior: smooth;
+}

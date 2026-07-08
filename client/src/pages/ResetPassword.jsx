@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import toast from "react-hot-toast";
+import AuthCard from "../components/AuthCard";
 
 function ResetPassword() {
   const { token } = useParams();
@@ -29,30 +30,24 @@ function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-6">
-      <div className="bg-[#111] border border-gray-700 rounded-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-white text-center mb-6">
-          Reset Password
-        </h1>
+    <AuthCard title="Reset Password" subtitle="Create a new secure password.">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <input
+          type="password"
+          placeholder="New Password"
+          className="w-full px-4 py-3 rounded-lg bg-black border border-zinc-800 text-white placeholder-zinc-600 focus:outline-none focus:border-white transition"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <input
-            type="password"
-            placeholder="New Password"
-            className="w-full p-3 rounded-lg bg-[#1a1a1a] border border-gray-700 text-white"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <button className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-3 rounded-lg transition">
+          Update Password
+        </button>
+      </form>
 
-          <button className="w-full bg-green-600 hover:bg-green-500 p-3 rounded-lg text-white">
-            Update Password
-          </button>
-        </form>
-
-        {/* Toast notifications handle success and error messages */}
-      </div>
-    </div>
+      {/* Toast notifications handle success and error messages */}
+    </AuthCard>
   );
 }
 

@@ -38,6 +38,15 @@ app.use(
 
 app.use(express.json());
 
+// ✅ Health Check Route
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
 import toast from "react-hot-toast";
+import AuthCard from "../components/AuthCard";
 
 function Register() {
   const navigate = useNavigate();
@@ -45,83 +46,77 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
-      <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
+    <AuthCard
+      title="Create Account"
+      subtitle="Join and start tracking your jobs"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Name */}
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={form.name}
+          onChange={handleChange}
+          className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600
+            focus:outline-none focus:border-white"
+          required
+        />
 
-        <p className="text-center text-zinc-400 mb-6">
-          Join and start tracking your jobs
+        {/* Email */}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600
+            focus:outline-none focus:border-white"
+          required
+        />
+
+        {/* Password */}
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600
+            focus:outline-none focus:border-white"
+          required
+        />
+
+        {/* Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-zinc-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {loading ? "Creating Account..." : "Create Account"}
+        </button>
+      </form>
+
+      {/* Footer */}
+      <div className="mt-6 text-center">
+        <p className="text-zinc-400 text-sm">
+          Already have an account?{" "}
+          <Link to="/login" className="text-white underline">
+            Login
+          </Link>
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name */}
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600
-            focus:outline-none focus:border-white"
-            required
-          />
-
-          {/* Email */}
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600
-            focus:outline-none focus:border-white"
-            required
-          />
-
-          {/* Password */}
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600
-            focus:outline-none focus:border-white"
-            required
-          />
-
-          {/* Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-zinc-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        <p className="text-zinc-400 text-sm mt-4">
+          Didn't receive the verification email?{" "}
+          <Link
+            to="/resend-verification"
+            className="text-blue-400 hover:underline"
           >
-            {loading ? "Creating Account..." : "Create Account"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-zinc-400 text-sm">
-            Already have an account?{" "}
-            <Link to="/login" className="text-white underline">
-              Login
-            </Link>
-          </p>
-
-          <p className="text-zinc-400 text-sm mt-4">
-            Didn't receive the verification email?{" "}
-            <Link
-              to="/resend-verification"
-              className="text-blue-400 hover:underline"
-            >
-              Resend Verification Email
-            </Link>
-          </p>
-        </div>
+            Resend Verification Email
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthCard>
   );
 }
 

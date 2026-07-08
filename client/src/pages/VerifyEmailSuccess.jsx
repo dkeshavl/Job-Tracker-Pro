@@ -1,25 +1,26 @@
 import { Link } from "react-router-dom";
+import AuthCard from "../components/AuthCard";
 
 function VerifyEmailSuccess() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center text-white">
-      <div className="bg-[#111] p-10 rounded-xl border border-gray-700 text-center">
-        <h1 className="text-3xl text-green-400 font-bold">
-          Email Verified Successfully 🎉
-        </h1>
+    <AuthCard>
+      <div className="text-6xl mb-5">🎉</div>
 
-        <p className="mt-4 text-gray-300">
-          You can now log in to your account.
-        </p>
+      <h1 className="text-3xl font-bold text-green-400">
+        Email Verified Successfully
+      </h1>
 
-        <Link
-          to="/login"
-          className="mt-6 inline-block bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg transition"
-        >
-          Go to Login
-        </Link>
-      </div>
-    </div>
+      <p className="text-zinc-400 mt-3">
+        You can now log in to your account.
+      </p>
+
+      <Link
+        to="/login"
+        className="mt-8 flex justify-center w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-3 rounded-lg transition"
+      >
+        Go to Login
+      </Link>
+    </AuthCard>
   );
 }
 

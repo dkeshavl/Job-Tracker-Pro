@@ -34,17 +34,25 @@ function AddJob() {
 
       if (form.interview_date && form.interview_time) {
         // Parse the date and time inputs (they're in user's local timezone)
-        const [year, month, day] = form.interview_date.split('-').map(Number);
-        const [hours, minutes] = form.interview_time.split(':').map(Number);
+        const [year, month, day] = form.interview_date.split("-").map(Number);
+        const [hours, minutes] = form.interview_time.split(":").map(Number);
 
         // Create a Date object in user's local timezone
-        const localDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+        const localDateTime = new Date(
+          year,
+          month - 1,
+          day,
+          hours,
+          minutes,
+          0,
+          0,
+        );
 
         // Convert to UTC ISO 8601 string
         interview_datetime = localDateTime.toISOString();
 
-        console.log('User entered (local timezone):', localDateTime);
-        console.log('Sending to backend (UTC ISO):', interview_datetime);
+        console.log("User entered (local timezone):", localDateTime);
+        console.log("Sending to backend (UTC ISO):", interview_datetime);
       }
 
       // Build payload with UTC datetime
@@ -128,6 +136,7 @@ function AddJob() {
           <input
             type="date"
             name="interview_date"
+            placeholder="Date"
             value={form.interview_date}
             onChange={handleChange}
             onFocus={(e) => {
@@ -142,6 +151,7 @@ function AddJob() {
           <input
             type="time"
             name="interview_time"
+            placeholder="Time"
             value={form.interview_time}
             onChange={handleChange}
             onFocus={(e) => {

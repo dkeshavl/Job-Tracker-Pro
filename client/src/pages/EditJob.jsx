@@ -36,7 +36,9 @@ function EditJob() {
       }
 
       const pad = (n) => String(n).padStart(2, "0");
-      const dt = job.interview_datetime ? new Date(job.interview_datetime) : null;
+      const dt = job.interview_datetime
+        ? new Date(job.interview_datetime)
+        : null;
 
       setForm({
         company: job.company || "",
@@ -47,7 +49,9 @@ function EditJob() {
         interview_date: dt
           ? `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`
           : "",
-        interview_time: dt ? `${pad(dt.getHours())}:${pad(dt.getMinutes())}` : "",
+        interview_time: dt
+          ? `${pad(dt.getHours())}:${pad(dt.getMinutes())}`
+          : "",
       });
     } catch (err) {
       console.error(err.response?.data || err);
@@ -69,7 +73,15 @@ function EditJob() {
       if (form.interview_date && form.interview_time) {
         const [year, month, day] = form.interview_date.split("-").map(Number);
         const [hours, minutes] = form.interview_time.split(":").map(Number);
-        const localDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+        const localDateTime = new Date(
+          year,
+          month - 1,
+          day,
+          hours,
+          minutes,
+          0,
+          0,
+        );
         interview_datetime = localDateTime.toISOString();
       }
 
@@ -145,7 +157,7 @@ function EditJob() {
           />
 
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Interview Date</label>
+            <label className="block text-sm text-gray-400 mb-2">Date</label>
             <input
               type="date"
               name="interview_date"
@@ -157,7 +169,7 @@ function EditJob() {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Interview Time</label>
+            <label className="block text-sm text-gray-400 mb-2">Time</label>
             <input
               type="time"
               name="interview_time"
