@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 function EditJob() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     company: "",
@@ -67,6 +68,9 @@ function EditJob() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       let interview_datetime = null;
 
@@ -99,6 +103,7 @@ function EditJob() {
     } catch (err) {
       console.error(err.response?.data || err);
       toast.error(err.response?.data?.message || "Failed to update job.");
+      setIsSubmitting(false);
     }
   };
 
@@ -191,9 +196,10 @@ function EditJob() {
 
           <button
             type="submit"
-            className="w-full bg-white text-black py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
+            disabled={isSubmitting}
+            className="w-full bg-white text-black py-3 rounded-lg font-semibold hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Update Job
+            {isSubmitting ? "Updating..." : "Update Job"}
           </button>
         </form>
       </div>

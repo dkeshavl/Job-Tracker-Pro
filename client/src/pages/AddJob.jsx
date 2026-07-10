@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 function AddJob() {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     company: "",
@@ -27,6 +28,12 @@ function AddJob() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prevent double-submit: if a request is already in flight (e.g. the
+    // user clicked twice while Render's free tier was slow to respond),
+    // ignore the second click instead of firing a duplicate POST.
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
       // ✅ Convert user's local date/time to UTC ISO string
@@ -72,6 +79,7 @@ function AddJob() {
     } catch (err) {
       console.error(err.response?.data || err);
       toast.error(err.response?.data?.message || "Failed to add job.");
+      setIsSubmitting(false);
     }
   };
 
@@ -199,9 +207,10 @@ function AddJob() {
 
           <button
             type="submit"
-            className="w-full bg-white text-black py-2 rounded-lg font-medium hover:bg-gray-200 transition"
+            disabled={isSubmitting}
+            className="w-full bg-white text-black py-2 rounded-lg font-medium hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add Job
+            {isSubmitting ? "Adding..." : "Add Job"}
           </button>
         </form>
       </div>

@@ -9,7 +9,17 @@ module.exports = (name, company, position) => {
     ${infoTable([
       ["Company", company],
       ["Position", position],
-      ["Deleted On", new Date().toLocaleString()],
+      [
+        "Deleted On",
+        new Date().toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      ],
     ])}
 
     <p style="margin:20px 0 0; color:#6b7280; font-size:13px;">
