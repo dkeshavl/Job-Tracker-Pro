@@ -118,12 +118,11 @@ function AddJob() {
             onChange={handleChange}
             className={inputClass}
           >
-            <option>Applied</option>
-            <option>Interview</option>
-            <option>Rejected</option>
-            <option>Offer</option>
+            <option value="Applied">Applied</option>
+            <option value="Interview">Interview</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
           </select>
-
           <input
             name="salary"
             placeholder="Salary"
@@ -132,35 +131,62 @@ function AddJob() {
             className={inputClass}
           />
 
-          {/* INTERVIEW DATE */}
-          <input
-            type="date"
-            name="interview_date"
-            placeholder="Date"
-            value={form.interview_date}
-            onChange={handleChange}
-            onFocus={(e) => {
-              if (e.target.showPicker) {
-                e.target.showPicker();
-              }
-            }}
-            className={inputClass}
-          />
+          {form.status === "Interview" && (
+            <div className="space-y-4 rounded-xl border border-gray-800 bg-[#111] p-5">
+              <div>
+                <h3 className="font-medium text-white">Interview Schedule</h3>
 
-          {/* INTERVIEW TIME */}
-          <input
-            type="time"
-            name="interview_time"
-            placeholder="Time"
-            value={form.interview_time}
-            onChange={handleChange}
-            onFocus={(e) => {
-              if (e.target.showPicker) {
-                e.target.showPicker();
-              }
-            }}
-            className={inputClass}
-          />
+                <p className="mt-1 text-sm text-gray-500">
+                  Set the interview date and time to receive automatic email
+                  reminders.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-400">
+                    Interview Date
+                  </label>
+
+                  <input
+                    type="date"
+                    name="interview_date"
+                    value={form.interview_date}
+                    onChange={handleChange}
+                    onFocus={(e) => e.target.showPicker?.()}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-400">
+                    Interview Time
+                  </label>
+
+                  <input
+                    type="time"
+                    name="interview_time"
+                    value={form.interview_time}
+                    onChange={handleChange}
+                    onFocus={(e) => e.target.showPicker?.()}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-800 bg-black px-4 py-3">
+                <p className="text-sm text-gray-400">
+                  📧 Automatic reminders will be sent:
+                </p>
+
+                <ul className="mt-2 space-y-1 text-sm text-gray-500">
+                  <li>• 24 hours before</li>
+                  <li>• 1 hour before</li>
+                  <li>• 10 minutes before</li>
+                </ul>
+              </div>
+            </div>
+          )}
 
           <textarea
             name="notes"

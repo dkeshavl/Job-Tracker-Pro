@@ -7,6 +7,12 @@ const interview10mTemplate = require("../templates/interview10mTemplate");
 
 console.log("✅ Interview Reminder Cron Started");
 
+// The interview_datetime column stores UTC. Render's server clock is UTC
+// by default, so formatting without an explicit timeZone showed the
+// wrong hour to users. Format explicitly in IST (India) to match what
+// users actually entered in AddJob.jsx (their browser's local time).
+const DISPLAY_TIMEZONE = "Asia/Kolkata";
+
 // runs every minute
 cron.schedule("* * * * *", async () => {
   try {
@@ -36,8 +42,14 @@ cron.schedule("* * * * *", async () => {
       if (diff < -60000) continue;
 
       const totalSeconds = Math.floor(diff / 1000);
-      const dateLabel = interview.toLocaleDateString();
-      const timeLabel = interview.toLocaleTimeString([], {
+      const dateLabel = interview.toLocaleDateString("en-IN", {
+        timeZone: DISPLAY_TIMEZONE,
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const timeLabel = interview.toLocaleTimeString("en-IN", {
+        timeZone: DISPLAY_TIMEZONE,
         hour: "2-digit",
         minute: "2-digit",
       });

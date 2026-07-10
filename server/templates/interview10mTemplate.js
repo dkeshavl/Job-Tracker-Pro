@@ -1,124 +1,50 @@
+const { emailLayout, infoTable } = require("./layout");
+
 const interview10mTemplate = (
   name,
   company,
   position,
   interviewDate,
   interviewTime,
-  remainingTime
+  remainingTime,
 ) => {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Interview Starting Soon</title>
-</head>
+  const bodyHtml = `
+    <h2 style="margin:0 0 16px; font-size:20px; color:#dc2626;">🚨 Interview Starting Soon</h2>
+    <p style="margin:0 0 8px;">Hi ${name},</p>
+    <p style="margin:0 0 8px;">Your interview is about to begin.</p>
 
-<body style="margin:0;padding:40px;background:#f4f6f9;font-family:Arial,sans-serif;">
+    ${infoTable([
+      ["Company", company],
+      ["Position", position],
+      ["Date", interviewDate],
+      ["Time", interviewTime],
+      ["Starts In", remainingTime, "#dc2626"],
+    ])}
 
-<div style="
-max-width:650px;
-margin:auto;
-background:white;
-border-radius:12px;
-overflow:hidden;
-box-shadow:0 5px 18px rgba(0,0,0,.08);
-">
+    <p style="margin:20px 0 8px; font-weight:600; color:#111827;">Final checklist:</p>
+    <ul style="margin:0 0 8px; padding-left:20px; color:#374151;">
+      <li style="margin-bottom:6px;">Join the meeting 5–10 minutes early</li>
+      <li style="margin-bottom:6px;">Keep your resume ready</li>
+      <li style="margin-bottom:6px;">Check your camera and microphone</li>
+      <li>Ensure a stable internet connection</li>
+    </ul>
 
-<div style="
-background:#dc2626;
-padding:30px;
-text-align:center;
-color:white;
-">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;">
+      <tr>
+        <td style="padding:16px 18px; background:#fef2f2; border-left:4px solid #dc2626; border-radius:6px;">
+          <b style="color:#111827;">Best of luck!</b><br />
+          <span style="color:#374151;">Stay confident and do your best. You've got this! 🚀</span>
+        </td>
+      </tr>
+    </table>
+  `;
 
-<h1 style="margin:0;">
-🚨 Interview Starting Soon
-</h1>
-
-<p style="margin-top:10px;">
-Job Tracker Pro
-</p>
-
-</div>
-
-<div style="padding:35px;">
-
-<h2>Hello ${name},</h2>
-
-<p>
-Your interview is about to begin.
-</p>
-
-<table style="width:100%;margin-top:25px;border-collapse:collapse;">
-
-<tr>
-<td style="padding:12px;border:1px solid #eee;"><b>🏢 Company</b></td>
-<td style="padding:12px;border:1px solid #eee;">${company}</td>
-</tr>
-
-<tr>
-<td style="padding:12px;border:1px solid #eee;"><b>💼 Position</b></td>
-<td style="padding:12px;border:1px solid #eee;">${position}</td>
-</tr>
-
-<tr>
-<td style="padding:12px;border:1px solid #eee;"><b>📅 Date</b></td>
-<td style="padding:12px;border:1px solid #eee;">${interviewDate}</td>
-</tr>
-
-<tr>
-<td style="padding:12px;border:1px solid #eee;"><b>🕒 Time</b></td>
-<td style="padding:12px;border:1px solid #eee;">${interviewTime}</td>
-</tr>
-
-<tr>
-<td style="padding:12px;border:1px solid #eee;"><b>⏳ Starts In</b></td>
-<td style="padding:12px;border:1px solid #eee;">${remainingTime}</td>
-</tr>
-
-</table>
-
-<h3 style="margin-top:30px;">Final Checklist</h3>
-
-<ul style="line-height:1.8;">
-<li>✅ Join the meeting 5–10 minutes early</li>
-<li>✅ Keep your resume ready</li>
-<li>✅ Check your camera and microphone</li>
-<li>✅ Ensure a stable internet connection</li>
-<li>✅ Keep a glass of water nearby</li>
-</ul>
-
-<div style="
-margin-top:30px;
-padding:18px;
-background:#fef2f2;
-border-left:5px solid #dc2626;
-border-radius:8px;
-">
-
-<b>Best of luck!</b><br>
-Stay confident and do your best. You've got this! 🚀
-
-</div>
-
-<hr style="margin:35px 0;">
-
-<p style="color:#666;">
-This is an automated reminder from Job Tracker Pro.
-</p>
-
-<p style="font-weight:bold;">
-— Job Tracker Pro Team
-</p>
-
-</div>
-
-</div>
-
-</body>
-</html>
-`;
+  return emailLayout({
+    title: "Interview Starting Soon — Job Tracker Pro",
+    preheader: `${company} interview starts in ${remainingTime}`,
+    accentColor: "#dc2626",
+    bodyHtml,
+  });
 };
 
 module.exports = interview10mTemplate;

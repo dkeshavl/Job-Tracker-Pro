@@ -77,23 +77,26 @@ function Hero() {
 
           {/* Stats */}
 
-          <div className="mt-14 grid grid-cols-3 gap-6 max-w-lg">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5">
-              <h2 className="text-3xl font-bold">500+</h2>
-
-              <p className="mt-2 text-sm text-zinc-500">Jobs Managed</p>
+          <div className="mt-14 grid grid-cols-3 gap-3 sm:gap-6 max-w-lg">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 sm:p-5">
+              <h2 className="text-2xl sm:text-3xl font-bold">500+</h2>
+              <p className="mt-2 text-xs sm:text-sm text-zinc-500 break-words">
+                Jobs Managed
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5">
-              <h2 className="text-3xl font-bold">100%</h2>
-
-              <p className="mt-2 text-sm text-zinc-500">Free Forever</p>
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 sm:p-5">
+              <h2 className="text-2xl sm:text-3xl font-bold">100%</h2>
+              <p className="mt-2 text-xs sm:text-sm text-zinc-500 break-words">
+                Free Forever
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5">
-              <h2 className="text-3xl font-bold">Secure</h2>
-
-              <p className="mt-2 text-sm text-zinc-500">JWT Authentication</p>
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 sm:p-5">
+              <h2 className="text-2xl sm:text-3xl font-bold">Secure</h2>
+              <p className="mt-2 text-xs sm:text-sm text-zinc-500 break-words">
+                JWT Authentication
+              </p>
             </div>
           </div>
         </div>
